@@ -1,0 +1,13 @@
+{
+  "name": "yourdomain.com",
+  "version": "1.0.0",
+  "description": "This is a Boxe **python** example",
+  "apps": {
+    "domain_name": "yourdomain.com",
+    "env": {},
+    "run": {
+      "web": "app:app"
+    }
+  }
+}
+

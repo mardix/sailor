@@ -1,0 +1,14 @@
+{
+  "name": "node",
+  "version": "1.0.0",
+  "description": "This is a Boxe **node** example",
+  "apps": {
+    "domain_name": "yourdomain.com",
+    "runtime": "node",
+    "auto_restart": true,
+    "run": {
+      "web": "node app.js 2>&1 | cat"
+    }
+  }
+}
+
