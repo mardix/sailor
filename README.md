@@ -2,17 +2,20 @@
 
 # Boxie
 
-### Deploy mutiple sites or apps on a single server
+### Deploy mutiple sites and apps on a single VPS, Digital Ocean or Linode, with a process similar to Heroku or Dokku
 
 <img src="./boxie.jpeg" style="width: 250px; height: auto;"></center>
 
 ---
 
-Boxie allows you to deploy multiple sites or apps, run scripts and background workers on a single server.
+Boxie allows you to deploy multiple sites or apps, run scripts and background workers on a single VPS, Digital Ocean or Linode instace.
 
-**Boxie** serves the same purpose as Heroku and Dokku and follow the same workflow.
+Boxie is straightforward with a process similar to Heroku or Dokku where you push code to the host via Git, and Boxie will do make sure the application gets deployed. 
 
-**Boxie** supports deployments of:
+Also, if it's a web app, it will assign it a SSL certificate via letsencrypt.
+
+
+**Boxie** supports deployment for:
 
 - Python (Flask/Django/Assembly)
 - Nodejs (Express), 
@@ -22,11 +25,16 @@ Boxie allows you to deploy multiple sites or apps, run scripts and background wo
 
 ---
 
-## Why Boxie ?
+### Why Boxie and not Docker container or Dokku ?
 
-The main reason, was to deploy multiple Flask apps on a single DigitalOcean or Linode VM effortlessly. The other reason, was to make it easy to deploy many of my applications.
+Docker can be overkill sometimes, or you may want something simpler to deploy your application
 
-### Why not containers / Docker / Dokku ?
+
+### Which OS does Boxie support?
+
+Boxie support at a minimum:
+- Ubuntu 18.04LTS
+- Python 3.6
 
 ---
 
@@ -133,37 +141,70 @@ git commit -m "first..."
 
 #### 2. Add the Git remote
 
-Add a Git *remote* named **boxie** with the username **boxie** and substitute example.com with the public IP address or your domain of your VPS (DigitalOcean or Linode)
+Add a Git *remote* named **boxie** with the username **boxie** and substitute host.com with the public IP address or your domain of your VPS (DigitalOcean or Linode)
 
 format: `git remote add boxie boxie@[HOST]:[APP_NAME]`
 
 Example
 
 ```sh
-git remote add boxie boxie@example.com:flask-example
+git remote add boxie boxie@host.com:myapp.com
 ```
 
-#### 3. Edit boxie.json
+#### 3. Edit boxie.yml
 
-Make sure you have a file called `boxie.json` at the root of the application.
+Make sure you have a file called `boxie.yml` at the root of the application.
 
-`boxie.json` is a manifest format for describing web apps. It declares environment variables, scripts, and other information required to run an app on your server.
+`boxie.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server.
 
-If the root directory contains `requirements.txt` it will use Python, `package.json` will use Node, else it will use it as STATIC site to serve HTML & PHP. 
+`boxie.yml` contains an array of all apps to be deploy, and they are identified by `domain_name`.
+
+When setting up the remote, the *app_name* must match the `domain_name` in the boxie.yml
 
 
-```js
-// boxie.json 
+```yml
+# boxie.yml 
 
-{
-  "apps": {
-    "domain_name": "mysite.com",
-    "runtime": "python",
-    "run": {
-      "web": "app:app"
-    }
-  }
-}
+---
+  # with remote: boxie@host.com:myapp.com
+- domain_name: myapp.com
+  runtime: python
+  auto_restart: true
+  env:
+    ENV_KEY: ENV_VAL
+    ENV_KEY2: ENV_VAL2
+  apps:
+    web: app:app
+
+```
+
+For multiple sites or apps, just include additional entries in the array
+
+
+```yml
+# boxie.yml 
+
+---
+# this a python app, with remote: boxie@host.com:myapp.com
+- domain_name: myapp.com
+  runtime: python
+  auto_restart: true
+  env:
+    ENV_KEY: ENV_VAL
+    ENV_KEY2: ENV_VAL2
+  apps:
+    web: app:app
+
+# This is a node app, with remote: boxie@host.com:domain1.com
+- domain_name: domain1.com
+  runtime: node
+  auto_restart: true
+  env:
+    ENV_KEY: ENV_VAL
+    ENV_KEY2: ENV_VAL2
+  apps:
+    web: app:app
+
 
 ```
 
@@ -197,12 +238,12 @@ List all commands
 ssh boxie@host.com
 ```
 
-#### apps
+#### app:list
 
 List  all apps
 
 ```
-ssh boxie@host.com apps
+ssh boxie@host.com app:list
 ```
 
 #### deploy
@@ -210,7 +251,7 @@ ssh boxie@host.com apps
 Deploy app. `$app_name` is the app name
 
 ```
-ssh boxie@host.com deploy $app_name
+ssh boxie@host.com app:deploy $app_name
 ```
 
 #### reload
@@ -218,7 +259,7 @@ ssh boxie@host.com deploy $app_name
 Reload an app
 
 ```
-ssh boxie@host.com reload $app_name
+ssh boxie@host.com app:reload $app_name
 ```
 
 #### stop
@@ -226,7 +267,7 @@ ssh boxie@host.com reload $app_name
 Stop an app
 
 ```
-ssh boxie@host.com stop $app_name
+ssh boxie@host.com app:stop $app_name
 ```
 
 #### destroy
@@ -234,7 +275,7 @@ ssh boxie@host.com stop $app_name
 Delete an app
 
 ```
-ssh boxie@host.com destroy $app_name
+ssh boxie@host.com app:destroy $app_name
 ```
 
 #### reload-all
@@ -262,7 +303,7 @@ To scale the application
 Show the process count
 
 ```
-ssh boxie@host.com ps $app_name
+ssh boxie@host.com ps:list $app_name
 ```
 
 ### scale
@@ -270,7 +311,7 @@ ssh boxie@host.com ps $app_name
 Scale processes
 
 ```
-ssh boxie@host.com scale $app_name $proc=$count $proc2=$count2
+ssh boxie@host.com ps:scale $app_name $proc=$count $proc2=$count2
 ```
 
 ie: `ssh boxie@host.com scale site.com web=4`
@@ -279,12 +320,12 @@ ie: `ssh boxie@host.com scale site.com web=4`
 
 To edit application's environment variables 
 
-#### env
+#### list
 
 Show ENV configuration for app
 
 ```
-ssh boxie@host.com env $app_name
+ssh boxie@host.com env:list $app_name
 ```
 
 #### set
@@ -292,7 +333,7 @@ ssh boxie@host.com env $app_name
 Set ENV config
 
 ```
-ssh boxie@host.com del $app_name $KEY=$VAL $KEY2=$VAL2
+ssh boxie@host.com env:set $app_name $KEY=$VAL $KEY2=$VAL2
 ```
 
 #### del
@@ -300,7 +341,7 @@ ssh boxie@host.com del $app_name $KEY=$VAL $KEY2=$VAL2
 Delete a key from the environment var
 
 ```
-ssh boxie@host.com del $app_name $KEY
+ssh boxie@host.com env:del $app_name $KEY
 ```
 
 ### Log
@@ -308,7 +349,7 @@ ssh boxie@host.com del $app_name $KEY
 To view application's log
 
 ```
-ssh boxie@host.com log $app_name
+ssh boxie@host.com app:log $app_name
 ```
 
 ### Update
@@ -329,187 +370,95 @@ ssh boxie@host.com version
 
 ---
 
-## boxie.json
+## boxie.yml
 
-`boxie.json` is a manifest format for describing web apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
-
-*(scroll down for a full boxie.json without the comments)*
+`boxie.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
 
 
-```js 
-// boxie.json
+```yml 
+# boxie.yml
 
-{
-  "name": "", // name
-  "version": "", // version
-  "description": "", // description
-
-  // applications configuration
-  "app": {
-
-    // domain_name (string): the server name without http
-    "domain_name": "",
-    // runtime: python|node|static|shell
-    // python for wsgi application (default python)
-    // node: for node application, where the command should be ie: 'node inde.js 2>&1 | cat'
-    // static: for HTML/Static page and PHP
-    // shell: for any script that can be executed via the shell script, ie: command 2>&1 | cat
-    "runtime": "python",
-    // runtime_version: python : 3(default)|2, node: node version
-    "runtime_version": "3",
-    // auto_restart (bool): to force server restarts when deploying
-    "auto_restart": false,
-    // static_paths (array): specify list of static path to expose, [/url:path, ...]
-    "static_paths": ["/url:path", "/url2:path2"],
-    // https_only (bool): when true (default), it will redirect http to https
-    "https_only": true,
-    // threads (int): The total threads to use
-    "threads": "4",
-    // wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
-    "wsgi": true,
-    // letsencrypt (bool) true(default)
-    "ssl_letsencrypt": true,
-
-    // nginx (object): nginx specific config. can be omitted
-    "nginx": {
-      "cloudflare_acl": false,
-      "include_file": ""
-    },  
-
-    // uwsgi (object): uwsgi specific config. can be omitted
-    "uwsgi": {
-      "gevent": false,
-      "asyncio": false
-    },
-
-    // env, custom environment variable
-    "env": {
-
-    },
-
-    // scripts to run during application lifecycle
-    "scripts": {
-      // release (array): commands to execute each time the application is released/pushed
-      "release": [],
-      // destroy (array): commands to execute when the application is being deleted
-      "destroy": [],
-      // predeploy (array): commands to execute before spinning the app
-      "predeploy": [],
-      // postdeploy (array): commands to execute after spinning the app
-      "postdeploy": []
-    },
-
-    // run: processes to run. 
-    // 'web' is special, it’s the only process type that can receive external HTTP traffic  
-    // all other process name will be regular worker. The name doesn't matter 
-    "run": {
-      // web (string): it’s the only process type that can receive external HTTP traffic
-      // -> app:app (for python using wsgi)
-      // -> node server.js 2>&1 cat (For other web app which requires a server command)
-      // -> /web-root-dir-name (for static html+php)
-      "web": "",
-
-      // worker* (string): command to run, with a name. The name doesn't matter.
-      // it can be named anything
-      "worker": ""
-    }
-  }
-}
-
-```
-
-### [boxie.json] without the comments:
-
-Copy and edit the config below in your `boxie.json` file.
-
-```json
-
-{
-  "name": "",
-  "version": "",
-  "description": "",
-  "apps": {
-    "domain_name": "",
-    "runtime": "static",
-    "runtime_version": "3",
-    "auto_restart": true,
-    "static_paths": [],
-    "https_only": true,
-    "threads": 4,
-    "wsgi": true,
-    "ssl_letsencrypt": true,
-    "nginx": {
-      "cloudflare_acl": false,
-      "include_file": ""
-    },  
-    "uwsgi": {
-      "gevent": false,
-      "asyncio": false
-    },    
-    "env": {
-
-    },
-    "scripts": {
-      "release": [],
-      "destroy": [],
-      "predeploy": [],
-      "postdeploy": []
-    },    
-    "run": {
-      "web": "/",
-      "worker": ""
-    }
-  }
-}
-
-```
+# Boxie Configuration (https://mardix.github.io/boxie)
+# Boxie is tool to deploy multiple sites and app on a single server
 ---
+- 
+  # domain_name (string): the server name without http
+  domain_name: 
 
-## Multiple Apps Deployment 
+  # runtime: python|node|static|shell
+  # python for wsgi application (default python)
+  # node: for node application, where the command should be ie: 'node inde.js 2>&1 | cat'
+  # static: for HTML/Static page and PHP
+  # shell: for any script that can be executed via the shell script, ie: command 2>&1 | cat
+  runtime: static
 
-**Boxie** allows multiple sites deployment on a single repo.
+  # runtime_version: python : 3(default)|2, node: node version
+  runtime_version: '3'
 
-If you have a mono repo and want to deploy multiple applications based on the domain name, you can do so by having *boxie.json:apps* as an array instead of an object. The `app_name` must match the `domain_name` from the *boxie.json:apps[array]*
+  # auto_restart (bool): to force server restarts when deploying
+  auto_restart: true
 
-### Examples
+  # static_paths (array): specify list of static path to expose, [/url:path, ...]
+  static_paths: 
 
-#### Config
+  # https_only (bool): when true (default), it will redirect http to https
+  https_only: true
 
-Add multiple domains
+  # threads (int): The total threads to use
+  threads: 4
 
-```json
-{
-  "apps": [
-        {
-          "domain_name": "mysite.com",
-            ...
-        },
-        {
-          "domain_name": "myothersite.com",
-          ...
-        },
-        ...
-    ]
-}
+  # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
+  wsgi: true
 
+  # letsencrypt (bool) true(default)
+  ssl_letsencrypt: true
+
+  # nginx (object): nginx specific config. can be omitted
+  nginx:
+    cloudflare_acl: false
+    include_file: ''
+  
+  # uwsgi (object): uwsgi specific config. can be omitted
+  uwsgi:
+    gevent: false
+    asyncio: false
+  # env (object) custom environment variable
+  env: 
+    KEY: VALUE
+    KEY2: VALUE2
+
+  # scripts to run during application lifecycle
+  scripts:
+
+    # release (array): commands to execute each time the application is released/pushed
+    release: 
+      -
+    # destroy (array): commands to execute when the application is being deleted
+    destroy: 
+      - 
+    # predeploy (array): commands to execute before spinning the app
+    predeploy: 
+      - 
+    # postdeploy (array): commands to execute after spinning the app
+    postdeploy: 
+      - 
+
+  # apps: processes to run. 
+  # 'web' is special, it’s the only process type that can receive external HTTP traffic  
+  # all other process name will be regular worker. 
+  # The name doesn't matter 
+  apps:
+
+    # web (string): it’s the only process type that can receive external HTTP traffic
+    #-> app:app (for python using wsgi)
+    #-> node server.js 2>&1 cat (For other web app which requires a server command)
+    #-> /web-root-dir-name (for static html+php)
+    web: 
+
+    # worker* (string): command to run, with a name. The name doesn't matter.
+    # it can be named anything
+    worker: 
 ```
-#### Setup GIT
-
-```sh
-git remote add boxie-mysite boxie@example.com:mysite.com
-```
-
-```sh
-git remote add boxie-myothersite boxie@other-example.com:myothersite.com
-```
-
-#### Deploy app
-
-`git push boxie-mysite master` will deploy *mysite.com*
-
-`git push boxie-myothersite master` will deploy *myothersite.com*
-
----
 
 ## Upgrade Boxie
 
@@ -525,7 +474,7 @@ ssh boxie@host.com update
 
 - 0.1.0
   - Initial
-  - boxie.json contains the application configuration
+  - boxie.yml contains the application configuration
   - 'app.run.web' is set for static/web/wsgi command. Static accepts one path
   - added 'cli.upgrade' to upgrade to the latest version
   - 'boxie.json' can now have scripts to run 
@@ -543,14 +492,7 @@ ssh boxie@host.com update
   - Letsencrypt
   - ssl default
   - https default
-  - Multiple domain name deployment.
-    Sites in Mono repo can now rely on different config based on the app name
-    by having boxie.apps as a list of dict or array of object, it will test for 'domain_name' to match the app_name
-    ``` 
-    apps : [
-      {"domain_name": "abc.com", ...},
-      {"domain_name": "xyz.com", ...},
-    ]
+  - Multiple domain name deployment
     ```
 ---
 
@@ -560,17 +502,13 @@ ssh boxie@host.com update
 
 ---
 
-## Credit 
-
-Boxie is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you 
-
----
-
 ## Alternatives
 
 - [Dokku](https://github.com/dokku/dokku)
 - [Piku](https://github.com/piku/piku)
 - [Caprover](https://github.com/CapRover/CapRover)
+
+Credit: Boxie is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you.
 
 ---
 
