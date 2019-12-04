@@ -8,9 +8,9 @@
 
 ---
 
-Boxie allows you to deploy multiple sites or apps, run scripts and background workers on a single VPS, Digital Ocean or Linode instace.
+Boxie allows you to deploy multiple sites or apps, run scripts and background workers on a single VPS, Digital Ocean or Linode instance.
 
-Boxie is straightforward with a process similar to Heroku or Dokku where you push code to the host via Git, and Boxie will do make sure the application gets deployed. 
+Boxie is straightforward with a process similar to Heroku or Dokku where you push code to the host via Git, and Boxie will make sure the application gets deployed. 
 
 Also, if it's a web app, it will assign it a SSL certificate via letsencrypt.
 
@@ -246,7 +246,7 @@ List  all apps
 ssh boxie@host.com app:list
 ```
 
-#### deploy
+#### app:deploy
 
 Deploy app. `$app_name` is the app name
 
@@ -254,7 +254,7 @@ Deploy app. `$app_name` is the app name
 ssh boxie@host.com app:deploy $app_name
 ```
 
-#### reload
+#### app:reload
 
 Reload an app
 
@@ -262,7 +262,7 @@ Reload an app
 ssh boxie@host.com app:reload $app_name
 ```
 
-#### stop
+#### app:stop
 
 Stop an app
 
@@ -270,13 +270,76 @@ Stop an app
 ssh boxie@host.com app:stop $app_name
 ```
 
-#### destroy
+#### app:destroy
 
 Delete an app
 
 ```
 ssh boxie@host.com app:destroy $app_name
 ```
+
+
+### Scaling
+
+To scale the application
+
+### ps:list
+
+Show the process count
+
+```
+ssh boxie@host.com ps:list $app_name
+```
+
+### ps:scale
+
+Scale processes
+
+```
+ssh boxie@host.com ps:scale $app_name $proc=$count $proc2=$count2
+```
+
+ie: `ssh boxie@host.com scale site.com web=4`
+
+### Environment
+
+To edit application's environment variables 
+
+#### env:list
+
+Show ENV configuration for app
+
+```
+ssh boxie@host.com env:list $app_name
+```
+
+#### env:set
+
+Set ENV config
+
+```
+ssh boxie@host.com env:set $app_name $KEY=$VAL $KEY2=$VAL2
+```
+
+#### env:del
+
+Delete a key from the environment var
+
+```
+ssh boxie@host.com env:del $app_name $KEY
+```
+
+### Log
+
+#### app:log
+
+To view application's log
+
+```
+ssh boxie@host.com app:log $app_name
+```
+
+### Other
 
 #### reload-all
 
@@ -292,64 +355,6 @@ Stop all apps on the server
 
 ```
 ssh boxie@host.com stop-all
-```
-
-### Scaling
-
-To scale the application
-
-### ps
-
-Show the process count
-
-```
-ssh boxie@host.com ps:list $app_name
-```
-
-### scale
-
-Scale processes
-
-```
-ssh boxie@host.com ps:scale $app_name $proc=$count $proc2=$count2
-```
-
-ie: `ssh boxie@host.com scale site.com web=4`
-
-### Environment
-
-To edit application's environment variables 
-
-#### list
-
-Show ENV configuration for app
-
-```
-ssh boxie@host.com env:list $app_name
-```
-
-#### set
-
-Set ENV config
-
-```
-ssh boxie@host.com env:set $app_name $KEY=$VAL $KEY2=$VAL2
-```
-
-#### del
-
-Delete a key from the environment var
-
-```
-ssh boxie@host.com env:del $app_name $KEY
-```
-
-### Log
-
-To view application's log
-
-```
-ssh boxie@host.com app:log $app_name
 ```
 
 ### Update
