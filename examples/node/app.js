@@ -8,7 +8,7 @@ var port = process.env['PORT'] || 3000;
 var addr = process.env['BIND_ADDRESS'] || '127.0.0.1';
 
 app.get('/', (req, res) => {
-  res.send('Hello Boxe, from Node/Express on port ' + port + ' !');
+  res.send('Hello Boxie, from Node/Express on port ' + port + ' !');
 });
 
 // Listen to the port provided

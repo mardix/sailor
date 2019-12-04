@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Boxe
-A very small PaaS to do git push deployments to your own servers.
+Boxie: A tool to deploy mutiple sites or apps on a single server
 """
 
 try:
     from sys import version_info
     assert version_info >= (3, 5)
 except AssertionError:
-    exit("Boxe requires Python >= 3.5")
+    exit("Boxie requires Python >= 3.5")
 
 import sys
 import click
@@ -40,16 +39,16 @@ from grp import getgrgid
 
 # -----------------------------------------------------------------------------
 
-NAME = "Boxe"
+NAME = "Boxie"
 VERSION = "0.1.0"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
-BOXE_SCRIPT = realpath(__file__)
-BOXE_ROOT = environ.get('BOXE_ROOT', environ['HOME'])
-BOXE_BIN = join(environ['HOME'], 'bin')
-APP_ROOT = abspath(join(BOXE_ROOT, "apps"))
-DOT_ROOT = abspath(join(BOXE_ROOT, ".boxe"))
+BOXIE_SCRIPT = realpath(__file__)
+BOXIE_ROOT = environ.get('BOXIE_ROOT', environ['HOME'])
+BOXIE_BIN = join(environ['HOME'], 'bin')
+APP_ROOT = abspath(join(BOXIE_ROOT, "apps"))
+DOT_ROOT = abspath(join(BOXIE_ROOT, ".boxie"))
 ENV_ROOT = abspath(join(DOT_ROOT, "envs"))
 GIT_ROOT = abspath(join(DOT_ROOT, "repos"))
 LOG_ROOT = abspath(join(DOT_ROOT, "logs"))
@@ -67,8 +66,8 @@ UWSGI_LOG_MAXSIZE = '1048576'
 if 'sbin' not in environ['PATH']:
     environ['PATH'] = "/usr/local/sbin:/usr/sbin:/sbin:" + environ['PATH']
 
-if BOXE_BIN not in environ['PATH']:
-    environ['PATH'] = BOXE_BIN + ":" + environ['PATH']
+if BOXIE_BIN not in environ['PATH']:
+    environ['PATH'] = BOXIE_BIN + ":" + environ['PATH']
 
 # -----------------------------------------------------------------------------
 # NGINX
@@ -223,11 +222,6 @@ INTERNAL_NGINX_STATIC_CLAUSES = """
 """
 # -----------------------------------------------------------------------------
 
-
-def any_in_list(l1, t2):
-    return any((True for x in l1 if x in t2))
-
-
 def print_table(table, with_header=True):
     """
     To print data in table.
@@ -260,7 +254,7 @@ def print_table(table, with_header=True):
 
 def print_title(title=None, app=None):
     print("-" * 80)
-    print("Boxe v%s" % VERSION)
+    print("Boxie v%s" % VERSION)
     if app:
         print("App: %s" % app)
     if title:
@@ -296,13 +290,11 @@ def exit_if_not_exists(app):
 
 def get_free_port(address=""):
     """Find a free TCP port (entirely at random)"""
-
     s = socket(AF_INET, SOCK_STREAM)
     s.bind((address, 0))
     port = s.getsockname()[1]
     s.close()
     return port
-
 
 
 def setup_authorized_keys(ssh_fingerprint, script_path, pubkey):
@@ -324,7 +316,7 @@ def install_acme_sh():
     if exists(ACME_ROOT):
         return
     echo("......-> Installing acme.sh", fg="green")
-    call("curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh | INSTALLONLINE=1  sh", cwd=BOXE_ROOT, shell=True)
+    call("curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh | INSTALLONLINE=1  sh", cwd=BOXIE_ROOT, shell=True)
 
 
 def _get_env(app):
@@ -386,29 +378,20 @@ def parse_settings(filename, env={}):
     return env
 
 def get_config(app):
-    """ Return the info from boxe.json """
-    config_file = join(APP_ROOT, app, "boxe.json")
+    """ Return the info from boxie.yml """
+    config_file = join(APP_ROOT, app, "boxie.yml")
+
     with open(config_file) as f:
-        config = json.load(f)["apps"]
-
-        # multiple site can be deployed by having boxe.json:apps as array
-        # with each item containing a domain_name to match the app name 
-        if isinstance(config, list):
-            for c in config:
-              if app == c["domain_name"]:
-                  return c
-
-            echo("ERROR: '%s' not found in boxe.json. 'boxe.json:apps' is an array but app name didn't match domain_name" % app, fg="red")
-            exit(1)
-
-        # single site
-        else:
-            return config
-    return None
+        config = yaml.safe_load(f)
+        for c in config:
+            if app == c["domain_name"]:
+                return c
+        echo("ERROR: '%s' not found in boxie.yml. 'boxie.yml' is an array but app name didn't match domain_name" % app, fg="red")
+        exit(1)
 
 def get_app_workers(app):
     """ Returns the applications to run """
-    return {k.lower(): v  for k,v in get_config(app).get('run', {}).items()}
+    return {k.lower(): v  for k,v in get_config(app).get('apps', {}).items()}
 
 
 def get_app_config(app):
@@ -417,7 +400,7 @@ def get_app_config(app):
     config = get_config(app)
 
     # special keys
-    for k in ["env", "scripts", "run"]:
+    for k in ["env", "scripts", "apps"]:
         if k in config:
             del config[k]
 
@@ -524,10 +507,10 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         workers = get_app_workers(app)
     
         if not config:
-            echo("ERROR: Invalid boxe.json for app '%s'." % app, fg="red")
+            echo("ERROR: Invalid boxie.yml for app '%s'." % app, fg="red")
             exit(1)
         elif not workers:
-            echo("ERROR: boxe.json missing the 'boxe.run' processes or 'boxe.run' it is empty", fg="red")
+            echo("ERROR: boxie.yml seems to be invalid. Can't find apps", fg="red")
             exit(1)
         else:
             # ensure path exist
@@ -581,7 +564,7 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
 
 def get_spawn_env(app):
     env = {}
-    # base config from boxe.json
+    # base config from boxie.yml
     env.update(get_app_config(app))
     # Load environment variables shipped with repo (if any)
     env.update(get_app_env(app))
@@ -764,7 +747,7 @@ def spawn_app(app, deltas={}):
             # fall back to creating self-signed certificate if acme failed
             if not exists(key) or stat(crt).st_size == 0:
                 echo("......-> generating self-signed certificate")
-                call('openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=NY/L=New York/O=Boxe/OU=Self-Signed/CN={domain:s}" -keyout {key:s} -out {crt:s}'.format(
+                call('openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=NY/L=New York/O=Boxie/OU=Self-Signed/CN={domain:s}" -keyout {key:s} -out {crt:s}'.format(
                     **locals()), shell=True)
 
             # restrict access to server from CloudFlare IP addresses
@@ -1068,15 +1051,15 @@ def delete_app_metrics(app):
 
 @click.group()
 def cli():
-    """ Boxe - A very small PaaS to do git push deployments. 
+    """ Boxie
 
-    https://github.com/mardix/boxe/ """
+    https://github.com/mardix/boxie/ """
     pass
 
 
 # --- User commands ---
 
-@cli.command("apps")
+@cli.command("app:list")
 def list_apps():
     """List all apps"""
     print_title("All apps")
@@ -1115,7 +1098,7 @@ def list_apps():
             data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
     print_table(data)
 
-@cli.command("set")
+@cli.command("env:set")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_config_set(app, settings):
@@ -1137,7 +1120,7 @@ def cmd_config_set(app, settings):
     deploy_app(app)
 
 
-@cli.command("del")
+@cli.command("env:del")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_config_unset(app, settings):
@@ -1155,7 +1138,7 @@ def cmd_config_unset(app, settings):
     deploy_app(app)
 
 
-@cli.command("env")
+@cli.command("env:list")
 @click.argument('app')
 def cmd_config_live(app):
     """Show ENV config: [<app>] """
@@ -1168,7 +1151,7 @@ def cmd_config_live(app):
         echo("")      
         echo(open(env_file).read().strip(), fg='white') 
 
-@cli.command("deploy")
+@cli.command("app:deploy")
 @click.argument('app')
 def cmd_deploy(app):
     """Deploy app: [<app>]"""
@@ -1178,7 +1161,7 @@ def cmd_deploy(app):
     deploy_app(app)
 
 
-@cli.command("destroy")
+@cli.command("app:destroy")
 @click.argument('app')
 def cmd_destroy(app):
     """Delete app: [<app>]"""
@@ -1224,7 +1207,7 @@ def cmd_destroy(app):
         unlink(acme_link)
 
 
-@cli.command("log")
+@cli.command("app:log")
 @click.argument('app')
 def cmd_logs(app):
     """Read tail logs [<app>]"""
@@ -1239,7 +1222,7 @@ def cmd_logs(app):
         echo("No logs found for app '{}'.".format(app), fg='yellow')
 
 
-@cli.command("ps")
+@cli.command("ps:list")
 @click.argument('app')
 def cmd_ps(app):
     """Show process count: [<app>]"""
@@ -1256,7 +1239,7 @@ def cmd_ps(app):
         echo("Error: no workers found for app '%s'." % app, fg='red')
 
 
-@cli.command("scale")
+@cli.command("ps:scale")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_ps_scale(app, settings):
@@ -1284,7 +1267,7 @@ def cmd_ps_scale(app, settings):
     deploy_app(app, deltas)
 
 
-@cli.command("reload")
+@cli.command("app:reload")
 @click.argument('app')
 def cmd_reload(app):
     """Reload app: [<app>]"""
@@ -1309,7 +1292,7 @@ def cmd_reload_all():
             echo("...-> reloading '{}'...".format(app), fg='yellow')
             spawn_app(app)
 
-@cli.command("stop")
+@cli.command("app:stop")
 @click.argument('app')
 def cmd_stop(app):
     """Stop app: [<app>]"""
@@ -1343,7 +1326,7 @@ def cmd_setup_ssh(public_key_file):
                 fingerprint = str(check_output('ssh-keygen -lf ' + key_file, shell=True)).split(' ', 4)[1]
                 key = open(key_file, 'r').read().strip()
                 echo("Adding key '{}'.".format(fingerprint), fg='white')
-                setup_authorized_keys(fingerprint, BOXE_SCRIPT, key)
+                setup_authorized_keys(fingerprint, BOXIE_SCRIPT, key)
             except Exception:
                 echo("Error: invalid public key file '{}': {}".format(key_file, format_exc()), fg='red')
         elif '-' == public_key_file:
@@ -1366,13 +1349,13 @@ def cmd_version():
 
 @cli.command("update")
 def cmd_update():
-    """ Update Boxe to the latest from Github """
+    """ Update Boxie to the latest from Github """
     print_title("Updating")
-    url = "https://raw.githubusercontent.com/mardix/boxe/master/boxe.py"
-    echo("...downloading 'boxe.py' from github")
-    unlink(BOXE_SCRIPT)
-    urllib.request.urlretrieve(url, BOXE_SCRIPT)
-    chmod(BOXE_SCRIPT, stat(BOXE_SCRIPT).st_mode | S_IXUSR)
+    url = "https://raw.githubusercontent.com/mardix/boxie/master/boxie.py"
+    echo("...downloading 'boxie.py' from github")
+    unlink(BOXIE_SCRIPT)
+    urllib.request.urlretrieve(url, BOXIE_SCRIPT)
+    chmod(BOXIE_SCRIPT, stat(BOXIE_SCRIPT).st_mode | S_IXUSR)
     echo("...update completed!", fg="green")
 
 @cli.command("ssl-download")
@@ -1402,7 +1385,7 @@ def cmd_x(): pass
 
 
 def cmd_init():
-    """Initialize Boxe for 1st time"""
+    """Initialize Boxie for 1st time"""
 
     print_title()
     echo("......-> running in Python {}".format(".".join(map(str, version_info))))
@@ -1434,9 +1417,9 @@ def cmd_init():
             h.write("{k:s} = {v}\n".format(**locals()))
 
     # mark this script as executable (in case we were invoked via interpreter)
-    if not(stat(BOXE_SCRIPT).st_mode & S_IXUSR):
-        echo("Setting '{}' as executable.".format(BOXE_SCRIPT), fg='yellow')
-        chmod(BOXE_SCRIPT, stat(BOXE_SCRIPT).st_mode | S_IXUSR)
+    if not(stat(BOXIE_SCRIPT).st_mode & S_IXUSR):
+        echo("Setting '{}' as executable.".format(BOXIE_SCRIPT), fg='yellow')
+        chmod(BOXIE_SCRIPT, stat(BOXIE_SCRIPT).st_mode | S_IXUSR)
 
     # ACME
     install_acme_sh()
@@ -1476,7 +1459,7 @@ def cmd_git_receive_pack(app):
         with open(hook_path, 'w') as h:
             h.write("""#!/usr/bin/env bash
 set -e; set -o pipefail;
-cat | BOXE_ROOT="{BOXE_ROOT:s}" {BOXE_SCRIPT:s} git-hook {app:s}""".format(**env))
+cat | BOXIE_ROOT="{BOXIE_ROOT:s}" {BOXIE_SCRIPT:s} git-hook {app:s}""".format(**env))
         # Make the hook executable by our user
         chmod(hook_path, stat(hook_path).st_mode | S_IXUSR)
 

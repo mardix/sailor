@@ -1,0 +1,41 @@
+# Boxie Configuration
+---
+- domain_name: ''
+  runtime: static
+  runtime_version: '3'
+  auto_restart: true
+  static_paths: []
+  https_only: true
+  threads: 4
+  wsgi: true
+  ssl_letsencrypt: true
+  nginx:
+    cloudflare_acl: false
+    include_file: ''
+  uwsgi:
+    gevent: false
+    asyncio: false
+  # custom environment variable
+  env: 
+    KEY: VALUE
+    KEY2: VALUE2
+  scripts:
+    # list of scripts to run when app is pushed
+    release: 
+      - script1
+      - script2
+    # list of scripts to run when destroying the app
+    destroy: 
+      - script
+      - script
+    # list of scripts to run when destroying the app
+    predeploy: 
+      - script
+      - script
+    # list of scripts to run when destroying the app
+    postdeploy: 
+      - script
+      - script
+  run:
+    web: ''
+    worker: ''

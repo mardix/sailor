@@ -1,7 +1,7 @@
 {
   "name": "node",
   "version": "1.0.0",
-  "description": "This is a Boxe **node** example",
+  "description": "This is a Boxie **node** example",
   "apps": {
     "domain_name": "yourdomain.com",
     "runtime": "node",

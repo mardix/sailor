@@ -1,18 +1,18 @@
 <center>
 
-# Boxe
+# Boxie
 
-Deploy mutiple sites or apps on a single server
+### Deploy mutiple sites or apps on a single server
 
-<img src="./boxe.jpeg" style="width: 250px; height: auto;"></center>
+<img src="./boxie.jpeg" style="width: 250px; height: auto;"></center>
 
 ---
 
-Boxe allows you to deploy multiple sites or apps, run scripts and background workers on a single server.
+Boxie allows you to deploy multiple sites or apps, run scripts and background workers on a single server.
 
-**Boxe** serves the same purpose as Heroku and Dokku and follow the same workflow.
+**Boxie** serves the same purpose as Heroku and Dokku and follow the same workflow.
 
-**Boxe** supports deployments of:
+**Boxie** supports deployments of:
 
 - Python (Flask/Django/Assembly)
 - Nodejs (Express), 
@@ -22,9 +22,11 @@ Boxe allows you to deploy multiple sites or apps, run scripts and background wor
 
 ---
 
-## Why Boxe ?
+## Why Boxie ?
 
 The main reason, was to deploy multiple Flask apps on a single DigitalOcean or Linode VM effortlessly. The other reason, was to make it easy to deploy many of my applications.
+
+### Why not containers / Docker / Dokku ?
 
 ---
 
@@ -41,7 +43,7 @@ The main reason, was to deploy multiple Flask apps on a single DigitalOcean or L
 - Metrics to see app's health
 - Create static sites
 - Support Flask, Django, Assembly, Express, etc...
-- Easy configuration with boxe.json
+- Easy configuration with boxie.yml
 - Nginx
 - Logs
 
@@ -65,85 +67,93 @@ The main reason, was to deploy multiple Flask apps on a single DigitalOcean or L
 
 ---
 
-## Using `Boxe`
+## Using `Boxie`
 
-`piku` supports a Heroku-like workflow, like so:
+**Boxie** supports a Heroku-like workflow, like so:
 
-* Create a `git` SSH remote pointing to your `boxe` server with the app name as repo name.
-  `git remote add boxe boxe@yourserver:appname`.
-* Push your code: `git push boxe master`.
-* `boxe` determines the runtime and installs the dependencies for your app (building whatever's required).
-   * For Python, it segregates each app's dependencies into a `virtualenv`.
+* Create a `git` SSH remote pointing to your **Boxie** server with the app name as repo name.
+  `git remote add boxie boxie@yourserver:appname`.
+* Push your code: `git push boxie master`.
+* **Boxie** determines the runtime and installs the dependencies for your app (building whatever's required).
+   * For Python, it installs and segregates each app's dependencies from `requirements.txt` into a `virtualenv`.
    * For Node, it installs whatever is in `package.json` into `node_modules`.
-* It then looks at a `boxe.json` and starts the relevant workers using [uWSGI][uwsgi] as a generic process manager.
+* It then looks at a `boxie.json` and starts the relevant applications using a generic process manager.
+* 
 * You can optionally also specify a `release` worker which is run once when the app is deployed.
 * You can then remotely change application settings (`config:set`) or scale up/down worker processes (`ps:scale`).
 * A `static` worker type, with the root path as the argument, can be used to deploy a gh-pages style static site.
-
-
 
 ---
 
 ## Setup
 
-### 1. Get a VPS / Server
+### On VPS/Server
 
-For Boxe to properly work, get a fresh VPS from either Digital Ocean, Linode or any server 
+#### 1. Get a VPS / Server
+
+For Boxie to properly work, get a fresh VPS from either Digital Ocean, Linode or any server 
 that will allow you to **SSH** in.
 
 We recommend *Ubuntu 18.04 LTS* as OS
 
-### 2. Download Boxe install.sh
+#### 2. Download Boxie install.sh
 
-Copy the code below that will download and install **Boxe**
+Copy the code below that will download and install **Boxie**
 
 ```sh
-curl https://raw.githubusercontent.com/mardix/boxe/master/install.sh > install.sh
+curl https://raw.githubusercontent.com/mardix/boxie/master/install.sh > install.sh
 chmod 755 install.sh
 ./install.sh
 ```
 
-### 3. Boxe User
+#### 3. Boxie User
 
-Upon Boxe is installed:
+Upon Boxie is installed:
 
-- it creates a user **boxe** on the system. That user will be used to login and interact with your applications.
-- it creates a user path `/home/boxe`, which will contain all applications 
+- it creates a user **boxie** on the system. That user will be used to login and interact with your applications.
+- it creates a user path `/home/boxie`, which will contain all applications 
 
+Now, having successfully install **Boxie**, your server is now ready to accept Git pushes.
 
-### 2. Local environement 
+---
 
-On your local machine follow the steps below:
+### On Local machine
 
-#### Git Remote 
+All you need on your local environment is Git and a terminal to access your server via SSH.
 
-1.Make sure you have GIT on your machine, initialize the application repo
+#### 1. Setup your Git Remote 
+
+In the application you will be deploying, initialize the git repo, add, commit your changes.
 
 ```
 git init
 git add . 
-git commit 
+git commit -m "first..."
 ```
 
-2.Add a remote named **boxe** with the username **boxe** and substitute example.com with the public IP address or your domain of your VPS (DigitalOcean or Linode)
+#### 2. Add the Git remote
 
-format: `git remote add boxe boxe@[HOST]:[APP_NAME]`
+Add a Git *remote* named **boxie** with the username **boxie** and substitute example.com with the public IP address or your domain of your VPS (DigitalOcean or Linode)
+
+format: `git remote add boxie boxie@[HOST]:[APP_NAME]`
 
 Example
 
 ```sh
-git remote add boxe boxe@example.com:flask-example
+git remote add boxie boxie@example.com:flask-example
 ```
 
-### 3. Edit boxe.json
+#### 3. Edit boxie.json
 
-At a minimum, the `boxe.json` should look like this. 
+Make sure you have a file called `boxie.json` at the root of the application.
+
+`boxie.json` is a manifest format for describing web apps. It declares environment variables, scripts, and other information required to run an app on your server.
 
 If the root directory contains `requirements.txt` it will use Python, `package.json` will use Node, else it will use it as STATIC site to serve HTML & PHP. 
 
 
 ```js
-// boxe.json 
+// boxie.json 
 
 {
   "apps": {
@@ -157,19 +167,25 @@ If the root directory contains `requirements.txt` it will use Python, `package.j
 
 ```
 
-### 4. Deploy application
+#### 4. Deploy application
 
-Once you are ready to deploy, push your code to master
+Add and commit your changes...
 
-`git push boxe master`
+```
+git add . 
+git commit -m "made more changes"
+```
+AND PUSH YOUR CODE:
+
+`git push boxie master`
 
 ---
 
 ## Commands
 
-Boxe communicates with your server via SSH, with the user name: `boxe`  
+Boxie communicates with your server via SSH, with the user name: `boxie`  
 
-ie: `ssh boxe@host.com`
+ie: `ssh boxie@host.com`
 
 ### General
 
@@ -178,7 +194,7 @@ ie: `ssh boxe@host.com`
 List all commands
 
 ```
-ssh boxe@host.com
+ssh boxie@host.com
 ```
 
 #### apps
@@ -186,7 +202,7 @@ ssh boxe@host.com
 List  all apps
 
 ```
-ssh boxe@host.com apps
+ssh boxie@host.com apps
 ```
 
 #### deploy
@@ -194,7 +210,7 @@ ssh boxe@host.com apps
 Deploy app. `$app_name` is the app name
 
 ```
-ssh boxe@host.com deploy $app_name
+ssh boxie@host.com deploy $app_name
 ```
 
 #### reload
@@ -202,7 +218,7 @@ ssh boxe@host.com deploy $app_name
 Reload an app
 
 ```
-ssh boxe@host.com reload $app_name
+ssh boxie@host.com reload $app_name
 ```
 
 #### stop
@@ -210,7 +226,7 @@ ssh boxe@host.com reload $app_name
 Stop an app
 
 ```
-ssh boxe@host.com stop $app_name
+ssh boxie@host.com stop $app_name
 ```
 
 #### destroy
@@ -218,7 +234,7 @@ ssh boxe@host.com stop $app_name
 Delete an app
 
 ```
-ssh boxe@host.com destroy $app_name
+ssh boxie@host.com destroy $app_name
 ```
 
 #### reload-all
@@ -226,7 +242,7 @@ ssh boxe@host.com destroy $app_name
 Reload all apps on the server
 
 ```
-ssh boxe@host.com reload-all
+ssh boxie@host.com reload-all
 ```
 
 #### stop-all
@@ -234,7 +250,7 @@ ssh boxe@host.com reload-all
 Stop all apps on the server
 
 ```
-ssh boxe@host.com stop-all
+ssh boxie@host.com stop-all
 ```
 
 ### Scaling
@@ -246,7 +262,7 @@ To scale the application
 Show the process count
 
 ```
-ssh boxe@host.com ps $app_name
+ssh boxie@host.com ps $app_name
 ```
 
 ### scale
@@ -254,10 +270,10 @@ ssh boxe@host.com ps $app_name
 Scale processes
 
 ```
-ssh boxe@host.com scale $app_name $proc=$count $proc2=$count2
+ssh boxie@host.com scale $app_name $proc=$count $proc2=$count2
 ```
 
-ie: `ssh boxe@host.com scale site.com web=4`
+ie: `ssh boxie@host.com scale site.com web=4`
 
 ### Environment
 
@@ -268,7 +284,7 @@ To edit application's environment variables
 Show ENV configuration for app
 
 ```
-ssh boxe@host.com env $app_name
+ssh boxie@host.com env $app_name
 ```
 
 #### set
@@ -276,7 +292,7 @@ ssh boxe@host.com env $app_name
 Set ENV config
 
 ```
-ssh boxe@host.com del $app_name $KEY=$VAL $KEY2=$VAL2
+ssh boxie@host.com del $app_name $KEY=$VAL $KEY2=$VAL2
 ```
 
 #### del
@@ -284,7 +300,7 @@ ssh boxe@host.com del $app_name $KEY=$VAL $KEY2=$VAL2
 Delete a key from the environment var
 
 ```
-ssh boxe@host.com del $app_name $KEY
+ssh boxie@host.com del $app_name $KEY
 ```
 
 ### Log
@@ -292,36 +308,36 @@ ssh boxe@host.com del $app_name $KEY
 To view application's log
 
 ```
-ssh boxe@host.com log $app_name
+ssh boxie@host.com log $app_name
 ```
 
 ### Update
 
-To update Boxe to the latest from Github
+To update Boxie to the latest from Github
 
 ```
-ssh boxe@host.com update
+ssh boxie@host.com update
 ```
 
 ### Version
 
-To get Boxe's version
+To get Boxie's version
 
 ```
-ssh boxe@host.com version
+ssh boxie@host.com version
 ```
 
 ---
 
-## boxe.json
+## boxie.json
 
-`boxe.json` is a manifest format for describing web apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
+`boxie.json` is a manifest format for describing web apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
 
-*(scroll down for a full boxe.json without the comments)*
+*(scroll down for a full boxie.json without the comments)*
 
 
 ```js 
-// boxe.json
+// boxie.json
 
 {
   "name": "", // name
@@ -402,9 +418,9 @@ ssh boxe@host.com version
 
 ```
 
-### [boxe.json] without the comments:
+### [boxie.json] without the comments:
 
-Copy and edit the config below in your `boxe.json` file.
+Copy and edit the config below in your `boxie.json` file.
 
 ```json
 
@@ -451,9 +467,9 @@ Copy and edit the config below in your `boxe.json` file.
 
 ## Multiple Apps Deployment 
 
-**Boxe** allows multiple sites deployment on a single repo.
+**Boxie** allows multiple sites deployment on a single repo.
 
-If you have a mono repo and want to deploy multiple applications based on the domain name, you can do so by having *boxe.json:apps* as an array instead of an object. The `app_name` must match the `domain_name` from the *boxe.json:apps[array]*
+If you have a mono repo and want to deploy multiple applications based on the domain name, you can do so by having *boxie.json:apps* as an array instead of an object. The `app_name` must match the `domain_name` from the *boxie.json:apps[array]*
 
 ### Examples
 
@@ -480,27 +496,27 @@ Add multiple domains
 #### Setup GIT
 
 ```sh
-git remote add boxe-mysite boxe@example.com:mysite.com
+git remote add boxie-mysite boxie@example.com:mysite.com
 ```
 
 ```sh
-git remote add boxe-myothersite boxe@other-example.com:myothersite.com
+git remote add boxie-myothersite boxie@other-example.com:myothersite.com
 ```
 
 #### Deploy app
 
-`git push boxe-mysite master` will deploy *mysite.com*
+`git push boxie-mysite master` will deploy *mysite.com*
 
-`git push boxe-myothersite master` will deploy *myothersite.com*
+`git push boxie-myothersite master` will deploy *myothersite.com*
 
 ---
 
-## Upgrade Boxe
+## Upgrade Boxie
 
-If you're already using Boxe, you can upgrade Boxe with: 
+If you're already using Boxie, you can upgrade Boxie with: 
 
 ```
-ssh boxe@host.com update
+ssh boxie@host.com update
 ```
 ---
 
@@ -509,10 +525,10 @@ ssh boxe@host.com update
 
 - 0.1.0
   - Initial
-  - boxe.json contains the application configuration
+  - boxie.json contains the application configuration
   - 'app.run.web' is set for static/web/wsgi command. Static accepts one path
   - added 'cli.upgrade' to upgrade to the latest version
-  - 'boxe.json' can now have scripts to run 
+  - 'boxie.json' can now have scripts to run 
   - 'uwsgi' and 'nginx' are hidden, 'app.env' can contain basic key
   - 'app.static_paths' is an array
   - Fixed python virtualenv setup, if the repo was used for a different runtime
@@ -529,7 +545,7 @@ ssh boxe@host.com update
   - https default
   - Multiple domain name deployment.
     Sites in Mono repo can now rely on different config based on the app name
-    by having boxe.apps as a list of dict or array of object, it will test for 'domain_name' to match the app_name
+    by having boxie.apps as a list of dict or array of object, it will test for 'domain_name' to match the app_name
     ``` 
     apps : [
       {"domain_name": "abc.com", ...},
@@ -546,7 +562,7 @@ ssh boxe@host.com update
 
 ## Credit 
 
-Boxe is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you 
+Boxie is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you 
 
 ---
 

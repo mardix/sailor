@@ -1,7 +1,7 @@
 {
   "name": "yourdomain.com",
   "version": "1.0.0",
-  "description": "This is a Boxe **HTML/PHP** example",
+  "description": "This is a Boxie **HTML/PHP** example",
   "apps": {
     "runtime": "static",
     "domain_name": "yourdomain.com",

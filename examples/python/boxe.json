@@ -1,10 +1,13 @@
 {
   "name": "yourdomain.com",
   "version": "1.0.0",
-  "description": "This is a Boxe **python** example",
+  "description": "This is a Boxie **python** example",
   "apps": {
     "domain_name": "yourdomain.com",
-    "env": {},
+    "env": {
+      "ASSEMBLY_ENV": "Production",
+      "ASSEMBLY_APP": "default"
+    },
     "run": {
       "web": "app:app"
     }
