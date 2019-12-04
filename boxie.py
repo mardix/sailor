@@ -6,9 +6,9 @@ Boxie: A tool to deploy mutiple sites or apps on a single server
 
 try:
     from sys import version_info
-    assert version_info >= (3, 5)
+    assert version_info >= (3, 6)
 except AssertionError:
-    exit("Boxie requires Python >= 3.5")
+    exit("Boxie requires Python >= 3.6")
 
 import sys
 import click
