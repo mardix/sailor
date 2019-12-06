@@ -382,16 +382,16 @@ def get_config(app):
     config_file = join(APP_ROOT, app, "boxie.yml")
 
     with open(config_file) as f:
-        config = yaml.safe_load(f)
+        config = yaml.safe_load(f)["apps"]
         for c in config:
             if app == c["domain_name"]:
                 return c
-        echo("ERROR: '%s' not found in boxie.yml. 'boxie.yml' is an array but app name didn't match domain_name" % app, fg="red")
+        echo("ERROR: '%s' not found in boxie.yml. 'boxie.yml:apps' is an array but app name didn't match domain_name" % app, fg="red")
         exit(1)
 
-def get_app_workers(app):
+def get_app_processes(app):
     """ Returns the applications to run """
-    return {k.lower(): v  for k,v in get_config(app).get('apps', {}).items()}
+    return {k.lower(): v  for k,v in get_config(app).get('process', {}).items()}
 
 
 def get_app_config(app):
@@ -400,7 +400,7 @@ def get_app_config(app):
     config = get_config(app)
 
     # special keys
-    for k in ["env", "scripts", "apps"]:
+    for k in ["env", "scripts", "process"]:
         if k in config:
             del config[k]
 
@@ -504,7 +504,7 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         call('git submodule update', cwd=app_path, env=env, shell=True)
 
         config = get_config(app)
-        workers = get_app_workers(app)
+        workers = get_app_processes(app)
     
         if not config:
             echo("ERROR: Invalid boxie.yml for app '%s'." % app, fg="red")
@@ -652,7 +652,7 @@ def spawn_app(app, deltas={}):
 
     app_path = join(APP_ROOT, app)
     runtime = get_app_runtime(app)
-    workers = get_app_workers(app)
+    workers = get_app_processes(app)
     ordinals = defaultdict(lambda: 1)
     worker_count = {k: 1 for k in workers.keys()}
     virtualenv_path = join(ENV_ROOT, app)
@@ -879,7 +879,7 @@ def spawn_worker(app, kind, command, env, ordinal=1):
 
     app_kind = kind
     runtime = get_app_runtime(app)
-    workers = get_app_workers(app)
+    workers = get_app_processes(app)
     config = get_app_config(app)
 
     if app_kind == "web":
@@ -1068,7 +1068,7 @@ def list_apps():
     for app in listdir(APP_ROOT):
         if not app.startswith((".", "_")):
             runtime = get_app_runtime(app)
-            workers = get_app_workers(app)
+            workers = get_app_processes(app)
             metrics = get_app_metrics(app)
             settings = read_settings(app, 'ENV')
 

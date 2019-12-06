@@ -25,26 +25,23 @@ Also, if it's a web app, it will assign it a SSL certificate via letsencrypt.
 
 ---
 
-### Why Boxie and not Docker container or Dokku ?
+### Why should you use Boxie?
 
-Docker can be overkill sometimes, or you may want something simpler to deploy your application
+Docker containers or Dokku are alternative to Boxie, but they can be overkill sometimes; However if you want something simpler, that just deals with your application deployment, Boxie.
+
+Boxie provides a deployment similar to Heroku also. 
 
 
-### Which OS does Boxie support?
-
-Boxie support at a minimum:
-- Ubuntu 18.04LTS
-- Python 3.6
+Boxie supports at a minimum, *Ubuntu 18.04LTS*, *Python 3.6*. Upon installation, Boxie will install all the necessary packages to get your machine on point.
 
 ---
 
 ### Features
 
-- Easy command line setup
-- Instant deploy with Git
 - Multi applications deployment
+- Instant deploy with Git
+- Easy command line setup
 - App management: deploy, stop, delete, scale, logs apps
-- Simple and straight forward
 - SSL/HTTPS with LetsEncrypt
 - Any languages: Python, Nodejs, PHP, HTML/Static
 - Supports any Shell script, therefore any other languages are supported
@@ -85,7 +82,7 @@ Boxie support at a minimum:
 * **Boxie** determines the runtime and installs the dependencies for your app (building whatever's required).
    * For Python, it installs and segregates each app's dependencies from `requirements.txt` into a `virtualenv`.
    * For Node, it installs whatever is in `package.json` into `node_modules`.
-* It then looks at a `boxie.json` and starts the relevant applications using a generic process manager.
+* It then looks at a `boxie.yml` and starts the relevant applications using a generic process manager.
 * 
 * You can optionally also specify a `release` worker which is run once when the app is deployed.
 * You can then remotely change application settings (`config:set`) or scale up/down worker processes (`ps:scale`).
@@ -386,83 +383,87 @@ ssh boxie@host.com version
 # Boxie Configuration (https://mardix.github.io/boxie)
 # Boxie is tool to deploy multiple sites and app on a single server
 ---
-- 
-  # domain_name (string): the server name without http
-  domain_name: 
+name: 
+description:
+version:
+apps:
+  - 
+    # domain_name (string): the server name without http
+    domain_name: 
 
-  # runtime: python|node|static|shell
-  # python for wsgi application (default python)
-  # node: for node application, where the command should be ie: 'node inde.js 2>&1 | cat'
-  # static: for HTML/Static page and PHP
-  # shell: for any script that can be executed via the shell script, ie: command 2>&1 | cat
-  runtime: static
+    # runtime: python|node|static|shell
+    # python for wsgi application (default python)
+    # node: for node application, where the command should be ie: 'node inde.js 2>&1 | cat'
+    # static: for HTML/Static page and PHP
+    # shell: for any script that can be executed via the shell script, ie: command 2>&1 | cat
+    runtime: static
 
-  # runtime_version: python : 3(default)|2, node: node version
-  runtime_version: '3'
+    # runtime_version: python : 3(default)|2, node: node version
+    runtime_version: '3'
 
-  # auto_restart (bool): to force server restarts when deploying
-  auto_restart: true
+    # auto_restart (bool): to force server restarts when deploying
+    auto_restart: true
 
-  # static_paths (array): specify list of static path to expose, [/url:path, ...]
-  static_paths: 
+    # static_paths (array): specify list of static path to expose, [/url:path, ...]
+    static_paths: 
 
-  # https_only (bool): when true (default), it will redirect http to https
-  https_only: true
+    # https_only (bool): when true (default), it will redirect http to https
+    https_only: true
 
-  # threads (int): The total threads to use
-  threads: 4
+    # threads (int): The total threads to use
+    threads: 4
 
-  # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
-  wsgi: true
+    # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
+    wsgi: true
 
-  # letsencrypt (bool) true(default)
-  ssl_letsencrypt: true
+    # letsencrypt (bool) true(default)
+    ssl_letsencrypt: true
 
-  # nginx (object): nginx specific config. can be omitted
-  nginx:
-    cloudflare_acl: false
-    include_file: ''
-  
-  # uwsgi (object): uwsgi specific config. can be omitted
-  uwsgi:
-    gevent: false
-    asyncio: false
-  # env (object) custom environment variable
-  env: 
-    KEY: VALUE
-    KEY2: VALUE2
+    # nginx (object): nginx specific config. can be omitted
+    nginx:
+      cloudflare_acl: false
+      include_file: ''
+    
+    # uwsgi (object): uwsgi specific config. can be omitted
+    uwsgi:
+      gevent: false
+      asyncio: false
+    # env (object) custom environment variable
+    env: 
+      KEY: VALUE
+      KEY2: VALUE2
 
-  # scripts to run during application lifecycle
-  scripts:
+    # scripts to run during application lifecycle
+    scripts:
 
-    # release (array): commands to execute each time the application is released/pushed
-    release: 
-      -
-    # destroy (array): commands to execute when the application is being deleted
-    destroy: 
-      - 
-    # predeploy (array): commands to execute before spinning the app
-    predeploy: 
-      - 
-    # postdeploy (array): commands to execute after spinning the app
-    postdeploy: 
-      - 
+      # release (array): commands to execute each time the application is released/pushed
+      release: 
+        -
+      # destroy (array): commands to execute when the application is being deleted
+      destroy: 
+        - 
+      # predeploy (array): commands to execute before spinning the app
+      predeploy: 
+        - 
+      # postdeploy (array): commands to execute after spinning the app
+      postdeploy: 
+        - 
 
-  # apps: processes to run. 
-  # 'web' is special, it’s the only process type that can receive external HTTP traffic  
-  # all other process name will be regular worker. 
-  # The name doesn't matter 
-  apps:
+    # apps: processes to run. 
+    # 'web' is special, it’s the only process type that can receive external HTTP traffic  
+    # all other process name will be regular worker. 
+    # The name doesn't matter 
+    apps:
 
-    # web (string): it’s the only process type that can receive external HTTP traffic
-    #-> app:app (for python using wsgi)
-    #-> node server.js 2>&1 cat (For other web app which requires a server command)
-    #-> /web-root-dir-name (for static html+php)
-    web: 
+      # web (string): it’s the only process type that can receive external HTTP traffic
+      #-> app:app (for python using wsgi)
+      #-> node server.js 2>&1 cat (For other web app which requires a server command)
+      #-> /web-root-dir-name (for static html+php)
+      web: 
 
-    # worker* (string): command to run, with a name. The name doesn't matter.
-    # it can be named anything
-    worker: 
+      # worker* (string): command to run, with a name. The name doesn't matter.
+      # it can be named anything
+      worker: 
 ```
 
 ## Upgrade Boxie
