@@ -1,9 +1,22 @@
 # Boxie Configuration (https://mardix.github.io/boxie)
 # Boxie is tool to deploy multiple sites and app on a single server
 ---
-name:
+# boxie.yml
+
+# Boxie Configuration (https://mardix.github.io/boxie)
+# Boxie is tool to deploy multiple sites and app on a single server
+---
+  
+# name: a name for the application
+name: 
+
+# description of what it is
 description:
+
+# version if necessary
 version:
+
+#(*required) List of all application to run 
 apps:
   - 
     # domain_name (string): the server name without http
@@ -67,7 +80,7 @@ apps:
       postdeploy: 
         - 
 
-    # pro: processes to run. 
+    # *process (required) list of all processes to run. 
     # 'web' is special, it’s the only process type that can receive external HTTP traffic  
     # all other process name will be regular worker. 
     # The name doesn't matter 

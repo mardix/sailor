@@ -163,15 +163,16 @@ When setting up the remote, the *app_name* must match the `domain_name` in the b
 # boxie.yml 
 
 ---
-  # with remote: boxie@host.com:myapp.com
-- domain_name: myapp.com
-  runtime: python
-  auto_restart: true
-  env:
-    ENV_KEY: ENV_VAL
-    ENV_KEY2: ENV_VAL2
-  apps:
-    web: app:app
+apps:
+    # with remote: boxie@host.com:myapp.com
+  - domain_name: myapp.com
+    runtime: python
+    auto_restart: true
+    env:
+      ENV_KEY: ENV_VAL
+      ENV_KEY2: ENV_VAL2
+    process: # list of process to run
+      web: app:app
 
 ```
 
@@ -182,25 +183,26 @@ For multiple sites or apps, just include additional entries in the array
 # boxie.yml 
 
 ---
-# this a python app, with remote: boxie@host.com:myapp.com
-- domain_name: myapp.com
-  runtime: python
-  auto_restart: true
-  env:
-    ENV_KEY: ENV_VAL
-    ENV_KEY2: ENV_VAL2
-  apps:
-    web: app:app
+apps:
+  # this a python app, with remote: boxie@host.com:myapp.com
+  - domain_name: myapp.com
+    runtime: python
+    auto_restart: true
+    env:
+      ENV_KEY: ENV_VAL
+      ENV_KEY2: ENV_VAL2
+    process:
+      web: app:app
 
-# This is a node app, with remote: boxie@host.com:domain1.com
-- domain_name: domain1.com
-  runtime: node
-  auto_restart: true
-  env:
-    ENV_KEY: ENV_VAL
-    ENV_KEY2: ENV_VAL2
-  apps:
-    web: app:app
+  # This is a node app, with remote: boxie@host.com:domain1.com
+  - domain_name: domain1.com
+    runtime: node
+    auto_restart: true
+    env:
+      ENV_KEY: ENV_VAL
+      ENV_KEY2: ENV_VAL2
+    process:
+      web: app:app
 
 
 ```
@@ -383,9 +385,14 @@ ssh boxie@host.com version
 # Boxie Configuration (https://mardix.github.io/boxie)
 # Boxie is tool to deploy multiple sites and app on a single server
 ---
+# name: a name for the application
 name: 
+# description of what it is
 description:
+# version if necessary
 version:
+
+#(*required) List of all application to run 
 apps:
   - 
     # domain_name (string): the server name without http
@@ -449,11 +456,11 @@ apps:
       postdeploy: 
         - 
 
-    # apps: processes to run. 
+    # *process (required) list of all processes to run. 
     # 'web' is special, it’s the only process type that can receive external HTTP traffic  
     # all other process name will be regular worker. 
     # The name doesn't matter 
-    apps:
+    process:
 
       # web (string): it’s the only process type that can receive external HTTP traffic
       #-> app:app (for python using wsgi)
