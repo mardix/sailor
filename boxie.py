@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Boxie"
-VERSION = "0.0.3"
+VERSION = "0.0.4"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
