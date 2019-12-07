@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Boxie"
-VERSION = "0.0.5"
+VERSION = "0.1.0"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -1070,7 +1070,7 @@ def list_apps():
     """List all apps"""
     print_title("All apps")
     enabled = {a.split("___")[0] for a in listdir(UWSGI_ENABLED) if "___" in a}
-    data = [["App Name", "Domain Name", "Runtime", "Running", "Web", "Port", "SSL", "Workers", "AVG", "RSS", "VSZ", "TX"]]
+    data = [["Name", "Server Name", "Runtime", "Running", "Web", "Port", "SSL", "Workers", "AVG", "RSS", "VSZ", "TX"]]
     for app in listdir(APP_ROOT):
         if not app.startswith((".", "_")):
             runtime = get_app_runtime(app)
@@ -1081,7 +1081,7 @@ def list_apps():
             nginx_file = join(NGINX_ROOT, "%s.conf" % app)
             running = False
             port = settings.get("PORT", "-")
-            domain_name = settings.get('DOMAIN_NAME', '-')
+            domain_name = settings.get('SERVER_NAME', '-')
             ssl = "Y" if settings.get("SSL_LETSENCRYPT") is True else "-"
             
             avg = metrics.get("avg", "-")
