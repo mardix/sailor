@@ -8,11 +8,17 @@
 
 ---
 
-Boxie allows you to deploy multiple sites or apps, run scripts and background workers on a single VPS, Digital Ocean or Linode instance.
+**Boxie** is a utility to install on a host machine, that allows you to deploy multiple sites or apps, run scripts and background workers on a single VPS, Digital Ocean or Linode instance.
 
-Boxie is straightforward with a process similar to Heroku or Dokku where you push code to the host via Git, and Boxie will make sure the application gets deployed. 
-
-Also, if it's a web app, it will assign it a SSL certificate via letsencrypt.
+**Boxie** follows a process similar to Heroku or Dokku where you push code to the host via Git, and **Boxie** will:
+- create an instance on the host machine
+- deploy the new code
+- create virtual environments for your application
+- get a free SSL from LetsEncrypt and assign it to your domain
+- execute scripts to be executed
+- put your application online
+- monitor the application
+- restart the application if it crashes
 
 
 **Boxie** supports deployment for:
