@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Boxie"
-VERSION = "0.0.4"
+VERSION = "0.0.5"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -280,13 +280,16 @@ def sanitize_app_name(app):
     """Sanitize the app name and build matching path"""
     return "".join(c for c in app if c.isalnum() or c in ('.', '_', '-')).rstrip().lstrip('/')
 
+def fatal_error(msg):
+    echo(msg, fg="red")
+    exit(1)
 
-def exit_if_not_exists(app):
+
+def check_app(app):
     """Utility function for error checking upon command startup."""
     app = sanitize_app_name(app)
     if not exists(join(APP_ROOT, app)):
-        echo("ERROR: app '%s' not found." % app, fg='red')
-        exit(1)
+        fatal_error("ERROR: app '%s' not found." % app)
 
 
 def get_free_port(address=""):
@@ -385,22 +388,26 @@ def get_config(app):
     with open(config_file) as f:
         config = yaml.safe_load(f)["apps"]
         for c in config:
-            if app == c["domain_name"]:
+            if app == c["name"]:
                 return c
-        echo("ERROR: '%s' not found in boxie.yml. 'boxie.yml:apps' is an array but app name didn't match domain_name" % app, fg="red")
-        exit(1)
+        fatal_error("App '%s' is missing or didn't match any app 'name' in boxie.yml." % app)
 
 def get_app_processes(app):
     """ Returns the applications to run """
     return {k.lower(): v  for k,v in get_config(app).get('process', {}).items()}
-
 
 def get_app_config(app):
     """ Turn config into ENV """
     env = {}
     config = get_config(app)
 
-    # special keys
+    if "process" not in config:
+        fatal_error("missing 'process' for app: %s" % app)
+
+    if "web" in config["process"] and "server_name" not in config:
+        fatal_error("missing 'server_name' in app: %s" % app)
+
+    # keys to remove from the config
     for k in ["env", "scripts", "process"]:
         if k in config:
             del config[k]
@@ -508,11 +515,10 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         workers = get_app_processes(app)
     
         if not config:
-            echo("ERROR: Invalid boxie.yml for app '%s'." % app, fg="red")
-            exit(1)
+            fatal_error("Invalid boxie.yml for app '%s'." % app)
+
         elif not workers:
-            echo("ERROR: boxie.yml seems to be invalid. Can't find apps", fg="red")
-            exit(1)
+            fatal_error("ERROR: boxie.yml seems to be invalid. Can't find processes")
         else:
             # ensure path exist
             for p in ensure_paths:
@@ -534,13 +540,12 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
                 if "web" in workers:
                     # domain name
                     if "NGINX_SERVER_NAME" not in env2:
-                        echo("ERROR: Missing 'DOMAIN_NAME' when there is a 'web' application", fg="red")
-                        exit(1)
+                        fatal_error("missing 'server_name' when there is a 'web' process")
+
                     if runtime == "static":
                         if not workers["web"].startswith("/"):
-                            echo("ERROR: For static site the webroot must start with a '/' (slash), instead '%s' provided" % workers["web"], fg="red")
-                            exit(1)                            
-                    
+                            fatal_error("for static site the webroot must start with a '/' (slash), instead '%s' provided" % workers["web"])
+                  
                 # Setup runtime
                 # python
                 if runtime == "python":
@@ -1106,7 +1111,7 @@ def cmd_config_set(app, settings):
     """Set ENV config: [<app> [{KEY1}={VAL1}, ...]]"""
 
     echo("Update config for %s" % app, fg="green")
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     env = read_settings(app, 'CUSTOM')
     for s in settings:
@@ -1128,7 +1133,7 @@ def cmd_config_unset(app, settings):
     """Delete ENV config: [<app> {KEY}] """
 
     echo("Update config for %s" % app, fg="green")
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     env = read_settings(app, 'CUSTOM')
     for s in settings:
@@ -1144,7 +1149,7 @@ def cmd_config_unset(app, settings):
 def cmd_config_live(app):
     """Show ENV config: [<app>] """
     print_title("Env Config", app=app)
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     env_file = join(SETTINGS_ROOT, app, 'ENV')
 
@@ -1157,7 +1162,7 @@ def cmd_config_live(app):
 def cmd_deploy(app):
     """Deploy app: [<app>]"""
     echo("Deploy app", fg="green")
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     deploy_app(app)
 
@@ -1169,7 +1174,7 @@ def cmd_destroy(app):
     echo("**** WARNING ****", fg="red")
     echo("**** YOU ARE ABOUT TO DESTROY AN APP ****", fg="red")
 
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
 
     if not click.confirm("Do you want to destroy this app? It will delete everything"):
@@ -1213,7 +1218,7 @@ def cmd_destroy(app):
 def cmd_logs(app):
     """Read tail logs [<app>]"""
 
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     logfiles = glob(join(LOG_ROOT, app, '*.log'))
     if len(logfiles):
@@ -1229,7 +1234,7 @@ def cmd_ps(app):
     """Show process count: [<app>]"""
 
     print_title("Process", app=app)
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     env = read_settings(app, 'SCALING')
     if env:
@@ -1246,7 +1251,7 @@ def cmd_ps(app):
 def cmd_ps_scale(app, settings):
     """Scale processes: [<app> [<proc>=<count>, ...]]"""
 
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     env = read_settings(app, 'SCALING')
     worker_count = {k.lower(): int(v) for k, v in env.items()}
@@ -1273,7 +1278,7 @@ def cmd_ps_scale(app, settings):
 def cmd_reload(app):
     """Reload app: [<app>]"""
     echo("Reloading app", fg="green")
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     remove_nginx_conf(app)
     cleanup_uwsgi_enabled_ini(app)
@@ -1298,7 +1303,7 @@ def cmd_reload_all():
 def cmd_stop(app):
     """Stop app: [<app>]"""
     echo("Stopping app", fg="green")
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     remove_nginx_conf(app)
     cleanup_uwsgi_enabled_ini(app)
@@ -1365,7 +1370,7 @@ def cmd_ssl_download(app):
     """Downloading SSL CERT & KEY"""
     print_title("Download SSL Key & Cert")
     echo("Copy and paste ", fg="green")
-    exit_if_not_exists(app)
+    check_app(app)
     app = sanitize_app_name(app)
     key = join(NGINX_ROOT, "%s.%s" % (app, 'key'))
     crt = join(NGINX_ROOT, "%s.%s" % (app, 'crt')) 

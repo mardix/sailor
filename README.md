@@ -379,24 +379,31 @@ ssh boxie@host.com version
 `boxie.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
 
 
-```yml 
-# boxie.yml
+```yml
 
+# ~ Boxie ~
+# boxie.yml
 # Boxie Configuration (https://mardix.github.io/boxie)
-# Boxie is tool to deploy multiple sites and app on a single server
+#
 ---
-# name: a name for the application
+
+# Name of the package (not used by Boxie)
 name: 
-# description of what it is
+
+# description of the package (not used by Boxie)
 description:
-# version if necessary
+
+# version if necessary (not used by Boxie)
 version:
 
-#(*required) List of all application to run 
+# *required: list/array of all applications to run 
 apps:
   - 
-    # domain_name (string): the server name without http
-    domain_name: 
+    # *required - the name of the application
+    name: 
+
+    # the server name without http, will be used with process["web"]
+    server_name: 
 
     # runtime: python|node|static|shell
     # python for wsgi application (default python)
@@ -435,6 +442,7 @@ apps:
     uwsgi:
       gevent: false
       asyncio: false
+
     # env (object) custom environment variable
     env: 
       KEY: VALUE
@@ -445,18 +453,17 @@ apps:
 
       # release (array): commands to execute each time the application is released/pushed
       release: 
-        -
+
       # destroy (array): commands to execute when the application is being deleted
       destroy: 
-        - 
+
       # predeploy (array): commands to execute before spinning the app
-      predeploy: 
-        - 
+      predeploy:
+
       # postdeploy (array): commands to execute after spinning the app
       postdeploy: 
-        - 
 
-    # *process (required) list of all processes to run. 
+    # *required - process - list of all processes to run. 
     # 'web' is special, it’s the only process type that can receive external HTTP traffic  
     # all other process name will be regular worker. 
     # The name doesn't matter 
@@ -471,6 +478,7 @@ apps:
       # worker* (string): command to run, with a name. The name doesn't matter.
       # it can be named anything
       worker: 
+
 ```
 
 ## Upgrade Boxie

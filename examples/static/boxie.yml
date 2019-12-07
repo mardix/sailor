@@ -1,8 +1,13 @@
 # Boxie (https://mardix.github.io/boxie)
 ---
-- domain_name: yourdomain.com
-  runtime: static
-  apps:
-    web: /files
+name: 
+description:
+version:
+apps:
+  - name: yourdomain.com
+    server_name: yourdomain.com
+    runtime: static
+    process:
+      web: /files
 
 
