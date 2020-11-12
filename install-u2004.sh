@@ -1,13 +1,14 @@
 
-echo "Boxie installer - UBUNTU-18.04LTS"
+echo "Boxie installer - UBUNTU-20.04LTS"
 
 apt-get update
-apt-get install -y wget curl cron build-essential certbot git incron \
-   libjpeg-dev libxml2-dev libxslt1-dev zlib1g-dev nginx \
-   python-certbot-nginx python-dev python-pip python-virtualenv \
+apt-get install -y wget curl software-properties-common cron \ 
+   build-essential certbot git incron \
+   libjpeg-dev libxml2-dev libxslt1-dev zlib1g-dev nginx-full \
+   python3-certbot-nginx python-dev \
    python3-dev python3-pip python3-click python3-virtualenv \
-   uwsgi uwsgi-plugin-asyncio-python3 uwsgi-plugin-gevent-python \
-   uwsgi-plugin-python uwsgi-plugin-python3 uwsgi-plugin-tornado-python\
+   uwsgi uwsgi-plugin-asyncio-python3 uwsgi-plugin-gevent-python3 \
+   uwsgi-plugin-python3 uwsgi-plugin-tornado-python3\
    python-yaml php-fpm nodejs npm nodeenv
 apt-get update
 
