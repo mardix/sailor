@@ -128,7 +128,7 @@ NGINX_COMMON_FRAGMENT = """
   # Enable gzip compression
   gzip on;
   gzip_proxied any;
-  gzip_types text/plain text/xml text/css application/x-javascript text/javascript application/xml+rss application/atom+xml;
+  gzip_types text/plain text/xml text/css application/x-javascript text/javascript application/json application/xml+rss application/atom+xml;
   gzip_comp_level 7;
   gzip_min_length 2048;
   gzip_vary on;
@@ -942,6 +942,9 @@ def spawn_worker(app, kind, command, env, ordinal=1):
             settings.extend([('plugin', 'python3'), ])
             if 'UWSGI_ASYNCIO' in env:
                 settings.extend([('plugin', 'asyncio_python3'), ])
+        else:
+            fatal_error("this version of Python is not supported")
+
 
         echo("......-> nginx will talk to uWSGI via %s" % http, fg='yellow')
         settings.extend([('http', http), ('http-socket', http)])
