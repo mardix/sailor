@@ -931,14 +931,9 @@ def spawn_worker(app, kind, command, env, ordinal=1):
     # for Python only
     if app_kind == 'wsgi':
         python_version = int(env.get('RUNTIME_VERSION', '3'))
-        settings.extend([('module', command), ('threads', env.get('UWSGI_THREADS', '4'))])
-        if python_version == 2:
-            settings.extend([('plugin', 'python')])
-            if 'UWSGI_GEVENT' in env:
-                settings.extend([('plugin', 'gevent_python'), ('gevent', env['UWSGI_GEVENT'])])
-            elif 'UWSGI_ASYNCIO' in env:
-                settings.extend([('plugin', 'asyncio_python')])
-        elif python_version == 3:
+        settings.extend([('module', command), 
+                         ('threads', env.get('UWSGI_THREADS', '4'))])
+        if python_version == 3:
             settings.extend([('plugin', 'python3'), ])
             if 'UWSGI_ASYNCIO' in env:
                 settings.extend([('plugin', 'asyncio_python3'), ])
