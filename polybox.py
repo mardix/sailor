@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Boxie: A tool to deploy mutiple sites or apps on a single server
+Polybox: A tool to deploy mutiple sites or apps on a single server
 """
 
 try:
     from sys import version_info
     assert version_info >= (3, 6)
 except AssertionError:
-    exit("Boxie requires Python >= 3.6")
+    exit("Polybox requires Python >= 3.6")
 
 import sys
 import click
@@ -40,16 +40,16 @@ from grp import getgrgid
 
 # -----------------------------------------------------------------------------
 
-NAME = "Boxie"
-VERSION = "0.1.1"
+NAME = "Polybox"
+VERSION = "0.2.0"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
-BOXIE_SCRIPT = realpath(__file__)
-BOXIE_ROOT = environ.get('BOXIE_ROOT', environ['HOME'])
-BOXIE_BIN = join(environ['HOME'], 'bin')
-APP_ROOT = abspath(join(BOXIE_ROOT, "apps"))
-DOT_ROOT = abspath(join(BOXIE_ROOT, ".boxie"))
+BOX_SCRIPT = realpath(__file__)
+BOX_ROOT = environ.get('BOX_ROOT', environ['HOME'])
+BOX_BIN = join(environ['HOME'], 'bin')
+APP_ROOT = abspath(join(BOX_ROOT, "apps"))
+DOT_ROOT = abspath(join(BOX_ROOT, ".polybox"))
 ENV_ROOT = abspath(join(DOT_ROOT, "envs"))
 GIT_ROOT = abspath(join(DOT_ROOT, "repos"))
 LOG_ROOT = abspath(join(DOT_ROOT, "logs"))
@@ -67,8 +67,8 @@ UWSGI_LOG_MAXSIZE = '1048576'
 if 'sbin' not in environ['PATH']:
     environ['PATH'] = "/usr/local/sbin:/usr/sbin:/sbin:" + environ['PATH']
 
-if BOXIE_BIN not in environ['PATH']:
-    environ['PATH'] = BOXIE_BIN + ":" + environ['PATH']
+if BOX_BIN not in environ['PATH']:
+    environ['PATH'] = BOX_BIN + ":" + environ['PATH']
 
 # -----------------------------------------------------------------------------
 # NGINX
@@ -255,7 +255,7 @@ def print_table(table, with_header=True):
 
 def print_title(title=None, app=None):
     print("-" * 80)
-    print("Boxie v%s" % VERSION)
+    print("Polybox v%s" % VERSION)
     if app:
         print("App: %s" % app)
     if title:
@@ -320,7 +320,7 @@ def install_acme_sh():
     if exists(ACME_ROOT):
         return
     echo("......-> Installing acme.sh", fg="green")
-    call("curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh | INSTALLONLINE=1  sh", cwd=BOXIE_ROOT, shell=True)
+    call("curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh | INSTALLONLINE=1  sh", cwd=BOX_ROOT, shell=True)
 
 
 def _get_env(app):
@@ -382,15 +382,15 @@ def parse_settings(filename, env={}):
     return env
 
 def get_config(app):
-    """ Return the info from boxie.yml """
-    config_file = join(APP_ROOT, app, "boxie.yml")
+    """ Return the info from polybox.yml """
+    config_file = join(APP_ROOT, app, "polybox.yml")
 
     with open(config_file) as f:
         config = yaml.safe_load(f)["apps"]
         for c in config:
             if app == c["name"]:
                 return c
-        fatal_error("App '%s' is missing or didn't match any app 'name' in boxie.yml." % app)
+        fatal_error("App '%s' is missing or didn't match any app 'name' in polybox.yml." % app)
 
 def get_app_processes(app):
     """ Returns the applications to run """
@@ -515,10 +515,10 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         workers = get_app_processes(app)
     
         if not config:
-            fatal_error("Invalid boxie.yml for app '%s'." % app)
+            fatal_error("Invalid polybox.yml for app '%s'." % app)
 
         elif not workers:
-            fatal_error("ERROR: boxie.yml seems to be invalid. Can't find processes")
+            fatal_error("ERROR: polybox.yml seems to be invalid. Can't find processes")
         else:
             # ensure path exist
             for p in ensure_paths:
@@ -570,7 +570,7 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
 
 def get_spawn_env(app):
     env = {}
-    # base config from boxie.yml
+    # base config from polybox.yml
     env.update(get_app_config(app))
     # Load environment variables shipped with repo (if any)
     env.update(get_app_env(app))
@@ -753,7 +753,7 @@ def spawn_app(app, deltas={}):
             # fall back to creating self-signed certificate if acme failed
             if not exists(key) or stat(crt).st_size == 0:
                 echo("......-> generating self-signed certificate")
-                call('openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=NY/L=New York/O=Boxie/OU=Self-Signed/CN={domain:s}" -keyout {key:s} -out {crt:s}'.format(
+                call('openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=NY/L=New York/O=Polybox/OU=Self-Signed/CN={domain:s}" -keyout {key:s} -out {crt:s}'.format(
                     **locals()), shell=True)
 
             # restrict access to server from CloudFlare IP addresses
@@ -930,18 +930,10 @@ def spawn_worker(app, kind, command, env, ordinal=1):
 
     # for Python only
     if app_kind == 'wsgi':
-        python_version = int(env.get('RUNTIME_VERSION', '3'))
         settings.extend([('module', command), ('threads', env.get('UWSGI_THREADS', '4'))])
-        if python_version == 2:
-            settings.extend([('plugin', 'python')])
-            if 'UWSGI_GEVENT' in env:
-                settings.extend([('plugin', 'gevent_python'), ('gevent', env['UWSGI_GEVENT'])])
-            elif 'UWSGI_ASYNCIO' in env:
-                settings.extend([('plugin', 'asyncio_python')])
-        elif python_version == 3:
-            settings.extend([('plugin', 'python3'), ])
-            if 'UWSGI_ASYNCIO' in env:
-                settings.extend([('plugin', 'asyncio_python3'), ])
+        settings.extend([('plugin', 'python3'), ])
+        if 'UWSGI_ASYNCIO' in env:
+            settings.extend([('plugin', 'asyncio_python3'), ])
 
         echo("......-> nginx will talk to uWSGI via %s" % http, fg='yellow')
         settings.extend([('http', http), ('http-socket', http)])
@@ -1057,9 +1049,9 @@ def delete_app_metrics(app):
 
 @click.group()
 def cli():
-    """ Boxie
+    """ Polybox
 
-    https://github.com/mardix/boxie/ """
+    https://github.com/mardix/polybox/ """
     pass
 
 
@@ -1332,7 +1324,7 @@ def cmd_setup_ssh(public_key_file):
                 fingerprint = str(check_output('ssh-keygen -lf ' + key_file, shell=True)).split(' ', 4)[1]
                 key = open(key_file, 'r').read().strip()
                 echo("Adding key '{}'.".format(fingerprint), fg='white')
-                setup_authorized_keys(fingerprint, BOXIE_SCRIPT, key)
+                setup_authorized_keys(fingerprint, BOX_SCRIPT, key)
             except Exception:
                 echo("Error: invalid public key file '{}': {}".format(key_file, format_exc()), fg='red')
         elif '-' == public_key_file:
@@ -1355,13 +1347,13 @@ def cmd_version():
 
 @cli.command("update")
 def cmd_update():
-    """ Update Boxie to the latest from Github """
+    """ Update Polybox to the latest from Github """
     print_title("Updating")
-    url = "https://raw.githubusercontent.com/mardix/boxie/master/boxie.py"
-    echo("...downloading 'boxie.py' from github")
-    unlink(BOXIE_SCRIPT)
-    urllib.request.urlretrieve(url, BOXIE_SCRIPT)
-    chmod(BOXIE_SCRIPT, stat(BOXIE_SCRIPT).st_mode | S_IXUSR)
+    url = "https://raw.githubusercontent.com/mardix/polybox/master/polybox.py"
+    echo("...downloading 'polybox.py' from github")
+    unlink(BOX_SCRIPT)
+    urllib.request.urlretrieve(url, BOX_SCRIPT)
+    chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
     echo("...update completed!", fg="green")
 
 @cli.command("ssl-download")
@@ -1391,7 +1383,7 @@ def cmd_x(): pass
 
 
 def cmd_init():
-    """Initialize Boxie for 1st time"""
+    """Initialize Polybox for 1st time"""
 
     print_title()
     echo("......-> running in Python {}".format(".".join(map(str, version_info))))
@@ -1423,9 +1415,9 @@ def cmd_init():
             h.write("{k:s} = {v}\n".format(**locals()))
 
     # mark this script as executable (in case we were invoked via interpreter)
-    if not(stat(BOXIE_SCRIPT).st_mode & S_IXUSR):
-        echo("Setting '{}' as executable.".format(BOXIE_SCRIPT), fg='yellow')
-        chmod(BOXIE_SCRIPT, stat(BOXIE_SCRIPT).st_mode | S_IXUSR)
+    if not(stat(BOX_SCRIPT).st_mode & S_IXUSR):
+        echo("Setting '{}' as executable.".format(BOX_SCRIPT), fg='yellow')
+        chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
 
     # ACME
     install_acme_sh()
@@ -1465,7 +1457,7 @@ def cmd_git_receive_pack(app):
         with open(hook_path, 'w') as h:
             h.write("""#!/usr/bin/env bash
 set -e; set -o pipefail;
-cat | BOXIE_ROOT="{BOXIE_ROOT:s}" {BOXIE_SCRIPT:s} git-hook {app:s}""".format(**env))
+cat | BOX_ROOT="{BOX_ROOT:s}" {BOX_SCRIPT:s} git-hook {app:s}""".format(**env))
         # Make the hook executable by our user
         chmod(hook_path, stat(hook_path).st_mode | S_IXUSR)
 

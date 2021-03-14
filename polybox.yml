@@ -1,16 +1,16 @@
-# ~ Boxie ~
-# boxie.yml
-# Boxie Configuration (https://mardix.github.io/boxie)
+# ~ Polybox ~
+# polybox.yml
+# Polybox Configuration (https://mardix.github.io/polybox)
 #
 ---
 
-# Name of the package (not used by Boxie)
+# Name of the package (not used by Polybox)
 name: 
 
-# description of the package (not used by Boxie)
+# description of the package (not used by Polybox)
 description:
 
-# version if necessary (not used by Boxie)
+# version if necessary (not used by Polybox)
 version:
 
 # *required: list/array of all applications to run 
@@ -28,9 +28,6 @@ apps:
     # static: for HTML/Static page and PHP
     # shell: for any script that can be executed via the shell script, ie: command 2>&1 | cat
     runtime: static
-
-    # runtime_version: python : 3(default)|2, node: node version
-    runtime_version: '3'
 
     # auto_restart (bool): to force server restarts when deploying
     auto_restart: true
