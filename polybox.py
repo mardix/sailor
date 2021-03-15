@@ -663,7 +663,8 @@ def spawn_app(app, deltas={}):
     worker_count = {k: 1 for k in workers.keys()}
     virtualenv_path = join(ENV_ROOT, app)
     scaling = read_settings(app, 'SCALING')
-
+    error_detected = False
+    
     # Bootstrap environment
     env = {
         'APP': app,
@@ -829,9 +830,12 @@ def spawn_app(app, deltas={}):
             except:
                 nginx_config_test = None
             if nginx_config_test:
-                echo("Error: [nginx config] {}".format(nginx_config_test), fg='red')
-                echo("Warning: removing broken nginx config.", fg='yellow')
+                echo("!!!!!!!FATAL ERROR!!!!!!!", fg='red')
+                echo("!!!!!!!FATAL ERROR: [nginx config] {}".format(nginx_config_test), fg='red')
+                echo("!!!!!!!FATAL ERROR: removing broken nginx config.", fg='red')
                 unlink(nginx_conf)
+                echo("!!!!!!!FATAL ERROR: exiting setup.", fg='red')
+                exit(1)
 
     # Configured worker count
     if scaling:
@@ -875,7 +879,7 @@ def spawn_app(app, deltas={}):
             enabled = join(UWSGI_ENABLED, '{app:s}___{k:s}.{w:d}.ini'.format(**locals()))
             if exists(enabled):
                 echo("......-> terminating '{app:s}:{k:s}.{w:d}'".format(**locals()), fg='yellow')
-                unlink(enabled)
+                unl ink(enabled)
 
     return env
 
