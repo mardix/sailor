@@ -879,7 +879,7 @@ def spawn_app(app, deltas={}):
             enabled = join(UWSGI_ENABLED, '{app:s}___{k:s}.{w:d}.ini'.format(**locals()))
             if exists(enabled):
                 echo("......-> terminating '{app:s}:{k:s}.{w:d}'".format(**locals()), fg='yellow')
-                unl ink(enabled)
+                unlink(enabled)
 
     return env
 
