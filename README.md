@@ -505,7 +505,7 @@ apps:
 If you're already using Polybox, you can upgrade Polybox with: 
 
 ```
-ssh polybox@host.com update
+ssh polybox@host.com x-update
 ```
 ---
 
