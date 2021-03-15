@@ -1,0 +1,23 @@
+# Polybox (https://mardix.github.io/polybox)
+---
+name: 
+description:
+version:
+apps:
+  # Node app
+  - name: node-app
+    server_name: node-domain.com
+    runtime: node
+    auto_restart: true
+    process:
+      web: node app.js 2>&1 | cat
+  # Python app
+  - name: python-app
+    server_name: python-domain.com
+    runtime: python
+    auto_restart: true
+    env:
+      ENV_KEY: ENV_VAL
+      ENV_KEY2: ENV_VAL2
+    process:
+      web: app:app

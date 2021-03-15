@@ -1,4 +1,4 @@
-# Boxie
+# Polybox
 
 This is a **python** example
 
@@ -7,13 +7,13 @@ This is a **python** example
 ## Set up GIT remote
 
 ```
-git remote add boxie boxie@YOUR-HOST:python-example
+git remote add polybox polybox@YOUR-HOST:python-example
 ```
 
 ## GIT Push
 
 ```
-git push boxie master
+git push polybox master
 ```
 
 ---
