@@ -45,8 +45,10 @@ Polybox takes away all the complexity of Docker Containers or Dokku and gives yo
 
 ### Features
 
-- Multi applications deployment on a single server 
 - Git Push deployment
+- Deploy multiple apps on a single server / VPS
+- Deploy multiple apps from a single repository
+- Easy configuration with polybox.yml
 - Easy command line setup
 - App management: deploy, stop, delete, scale, logs apps
 - SSL/HTTPS with LetsEncrypt
@@ -55,7 +57,6 @@ Polybox takes away all the complexity of Docker Containers or Dokku and gives yo
 - Metrics to see app's health
 - Create static sites
 - Support Flask, Django, Express, etc...
-- Easy configuration with polybox.yml
 - Nginx
 - Logs
 

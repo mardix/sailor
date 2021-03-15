@@ -833,7 +833,7 @@ def spawn_app(app, deltas={}):
                 echo("!!!!!!!FATAL ERROR!!!!!!!", fg='red')
                 echo("!!!!!!!FATAL ERROR: [nginx config] {}".format(nginx_config_test), fg='red')
                 echo("!!!!!!!FATAL ERROR: removing broken nginx config.", fg='red')
-                unlink(nginx_conf)
+                #unlink(nginx_conf)
                 echo("!!!!!!!FATAL ERROR: exiting setup.", fg='red')
                 exit(1)
 
