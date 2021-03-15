@@ -57,4 +57,4 @@ cp /tmp/incron.conf /etc/incron.d/polybox
 cp /tmp/index.polybox.html /var/www/html
 
 echo ""
-echo "Polybase installation complete!"
+echo "Polybox installation complete!"
