@@ -1323,7 +1323,7 @@ def cmd_stop_all():
             echo("......-> '%s' stopped" % app, fg='yellow')
 
 
-@cli.command("x-set-ssh")
+@cli.command("set-ssh")
 @click.argument('public_key_file')
 def cmd_setup_ssh(public_key_file):
     """Set up a new SSH key (use - for stdin)"""
