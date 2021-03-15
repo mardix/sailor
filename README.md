@@ -5,7 +5,7 @@
 
 ---
 
-## The itty-bitty tool that `git push` and deploy apps, micro-services and websites on your own servers, like `Okrrrrrr!`
+## An *itty-bitty* PaaS that uses `git push` to deploy  micro-services and websites on your own servers, like `Okurrr!!!`
 
 ---
 
@@ -15,17 +15,265 @@
 - Git Push deployment
 - Deploy multiple apps on a single server / VPS
 - Deploy multiple apps from a single repository
+- Runs long running apps
+- Runs workers/background applications
 - Easy configuration with polybox.yml
 - Easy command line setup
-- App management: deploy, stop, delete, scale, logs apps
-- SSL/HTTPS with LetsEncrypt
-- Multi languages: Python, Nodejs, PHP, HTML/Static
+- App management: `deploy, reload, stop, destroy, scale, logs` etc
+- Run scripts during application lifecycle: `release, predeploy, postdeploy, destroy`
+- SSL/HTTPS with LetsEncrypt and ZeroSSL
 - Supports any Shell script, therefore any other languages are supported
 - Metrics to see app's health
 - Create static sites
+- Multi languages: Python, Nodejs, PHP, HTML/Static
 - Support Flask, Django, Express, etc...
+- Python >= 3.6
 - Nginx
 - Logs
+
+---
+
+## + Getting Started
+
+
+#### 1. Server Requirements
+
+- Fresh server (highly recommended)
+- SSH to server with root access
+- Ubuntu 20.04
+
+
+#### 2. Install Polybox on the server
+
+On the server, run the code below to setup the environment for Polybox and install all its dependencies. A new user, **`polybox`**, will be created and will be used to interact with SSH for Polybox.
+
+```sh
+curl https://raw.githubusercontent.com/mardix/polybox/master/install.sh > install.sh
+chmod 755 install.sh
+./install.sh
+```
+
+#### 3. Setup  Git on local repo
+
+On your local machine, point a Git remote to your Polybase server (set in step 2), with **`polybox`** as username.
+
+Format: `git remote add polybox polybox@[HOST]:[APP_NAME]`
+
+With:
+
+- `[HOST]` The server name or IP address 
+- `[APP_NAME]` The name of the application, that is set in the `polybox.yml` (the manifest to deploy)
+
+Example: `git remote add polybox polybox@my-server-host.com:myappname.com`
+
+---
+
+## + Getting work done!
+
+#### 1. Work on your app...
+
+...go into your repo and do what you do best, *okurrr!* :) 
+
+
+#### 2. Edit Polybox.yml
+
+At the root of your app directory, create  `polybox.yml` (required).
+
+```
+# polybox.yml
+
+---
+apps:
+    # with remote: polybox@[host.com]:myapp.com
+  - name: myapp.com
+    server_name: myapp.com
+    runtime: python
+    process:
+      web: app:app
+
+```
+
+#### 3. Add Git Remote
+
+Example: `git remote add polybox polybox@[host.com]:myapp.com`
+
+#### 4. Deploy
+
+Push your code: ` git push polybox master`
+
+#### 5. Profit!
+
+We did it, *Okurrr!*
+
+---
+
+## + Polybox Commands
+
+Polybox communicates with your server via SSH, with the user name: **`polybox`**
+
+ie: `ssh polybox@[host.com]`
+
+### General
+
+#### List all commands
+
+List all commands
+
+```
+ssh polybox@[host.com]
+```
+
+### -- Apps --
+
+To manage apps
+
+#### apps
+
+List  all apps
+
+```
+ssh polybox@[host.com] apps
+```
+
+
+#### deploy
+
+Deploy app. `[app_name]` is the app name
+
+```
+ssh polybox@[host.com] deploy [app_name]
+```
+
+#### reload
+
+Reload an app
+
+```
+ssh polybox@[host.com] reload [app_name]
+```
+
+#### stop
+
+Stop an app
+
+```
+ssh polybox@[host.com] stop [app_name]
+```
+
+#### destroy
+
+Delete an app
+
+```
+ssh polybox@[host.com] destroy [app_name]
+```
+
+
+#### reissue-ssl
+
+To reissue SSL
+
+```
+ssh polybox@[host.com] reissue-ssl [app_name]
+```
+
+#### log
+
+To view application's log
+
+```
+ssh polybox@[host.com] log [app_name]
+```
+
+## -- Scaling --
+
+To scale the application
+
+### ps
+
+Show the process count
+
+```
+ssh polybox@[host.com] ps [app_name]
+```
+
+### scale
+
+Scale processes
+
+```
+ssh polybox@[host.com] scale [app_name] $proc=$count $proc2=$count2
+```
+
+Example: 
+
+```
+ssh polybox@[host.com] scale site.com web=4
+```
+
+## -- Environment --
+
+To edit application's environment variables 
+
+#### envs
+
+Show ENV configuration for app
+
+```
+ssh polybox@[host.com] envs [app_name]
+```
+
+#### setenv
+
+Set ENV config
+
+```
+ssh polybox@[host.com] setenv [app_name] $KEY=$VAL $KEY2=$VAL2
+```
+
+#### delenv
+
+Delete a key from the environment var
+
+```
+ssh polybox@[host.com] delenv [app_name] $KEY
+```
+
+
+
+## -- Misc --
+
+#### reload-all
+
+Reload all apps on the server
+
+```
+ssh polybox@[host.com] reload-all
+```
+
+#### stop-all
+
+Stop all apps on the server
+
+```
+ssh polybox@[host.com] stop-all
+```
+
+### x-update
+
+To update Polybox to the latest from Github
+
+```
+ssh polybox@[host.com] x-update
+```
+
+### x-version
+
+To get Polybox's version
+
+```
+ssh polybox@[host.com] x-version
+```
 
 ---
 
@@ -60,14 +308,6 @@ Polybox is a simpler alternative to Docker containers or Dokku. It mainly deals 
 
 Polybox takes away all the complexity of Docker Containers or Dokku and gives you something simpler to deploy your applications, similar to Heroku, along with SSL.
 
----
-
-### Requirements
-
-- Fresh server
-- SSH to server with root access
-- Ubuntu 20.04
-- Python 3.6++
 
 ---
 
@@ -98,305 +338,15 @@ Polybox takes away all the complexity of Docker Containers or Dokku and gives yo
 
 ---
 
-## Setup
-
-### On VPS/Server
-
-#### 1. Get a VPS / Server
-
-For Polybox to properly work, get a fresh VPS from either Digital Ocean, Linode, Hetzner or any server 
-that will allow you to **SSH** in.
-
-We recommend *Ubuntu 20.04 LTS* as OS
-
-#### 2. Download Polybox install.sh
-
-Copy the code below that will download and install **Polybox**
-
-```sh
-curl https://raw.githubusercontent.com/mardix/polybox/master/install.sh > install.sh
-chmod 755 install.sh
-./install.sh
-```
-
-
-#### 3. Polybox User
-
-Upon Polybox is installed:
-
-- it creates a user **polybox** on the system. That user will be used to login and interact with your applications.
-- it creates a user path `/home/polybox`, which will contain all applications 
-
-Now, having successfully install **Polybox**, your server is now ready to accept Git pushes.
-
----
-
-### On Local machine
-
-All you need on your local environment is Git and a terminal to access your server via SSH.
-
-#### 1. Setup your Git Remote 
-
-In the application you will be deploying, initialize the git repo, add, commit your changes.
-
-```
-git init
-git add . 
-git commit -m "first..."
-```
-
-#### 2. Add the Git remote
-
-Add a Git *remote* named **polybox** with the username **polybox** and substitute host.com with the public IP address or your domain of your VPS (DigitalOcean or Linode)
-
-format: `git remote add polybox polybox@[HOST]:[APP_NAME]`
-
-Example
-
-```sh
-git remote add polybox polybox@host.com:myapp.com
-```
-
-#### 3. Edit polybox.yml
-
-Make sure you have a file called `polybox.yml` at the root of the application.
-
-`polybox.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server.
-
-`polybox.yml` contains an array of all apps to be deploy, and they are identified by `domain_name`.
-
-When setting up the remote, the *app_name* must match the `domain_name` in the polybox.yml
-
-
-```yml
-# polybox.yml 
-
----
-apps:
-    # with remote: polybox@host.com:myapp.com
-  - domain_name: myapp.com
-    runtime: python
-    auto_restart: true
-    env:
-      ENV_KEY: ENV_VAL
-      ENV_KEY2: ENV_VAL2
-    process: # list of process to run
-      web: app:app
-
-```
-
-For multiple sites or apps, just include additional entries in the array
-
-
-```yml
-# polybox.yml 
-
----
-apps:
-  # this a python app, with remote: polybox@host.com:myapp.com
-  - domain_name: myapp.com
-    runtime: python
-    auto_restart: true
-    env:
-      ENV_KEY: ENV_VAL
-      ENV_KEY2: ENV_VAL2
-    process:
-      web: app:app
-
-  # This is a node app, with remote: polybox@host.com:domain1.com
-  - domain_name: domain1.com
-    runtime: node
-    auto_restart: true
-    env:
-      ENV_KEY: ENV_VAL
-      ENV_KEY2: ENV_VAL2
-    process:
-      web: app:app
-
-
-```
-
-#### 4. Deploy application
-
-Add and commit your changes...
-
-```
-git add . 
-git commit -m "made more changes"
-```
-AND PUSH YOUR CODE:
-
-`git push polybox master`
-
----
-
-## Commands
-
-Polybox communicates with your server via SSH, with the user name: `polybox`  
-
-ie: `ssh polybox@[host.com]`
-
-### General
-
-#### List all commands
-
-List all commands
-
-```
-ssh polybox@[host.com]
-```
-
-## -- Apps --
-
-#### apps
-
-List  all apps
-
-```
-ssh polybox@host.com apps
-```
-
-
-#### deploy
-
-Deploy app. `$app_name` is the app name
-
-```
-ssh polybox@host.com deploy $app_name
-```
-
-#### reload
-
-Reload an app
-
-```
-ssh polybox@host.com reload $app_name
-```
-
-#### stop
-
-Stop an app
-
-```
-ssh polybox@host.com stop $app_name
-```
-
-#### destroy
-
-Delete an app
-
-```
-ssh polybox@host.com destroy $app_name
-```
-
-
-#### reissue-ssl
-
-To reissue SSL
-
-```
-ssh polybox@host.com reissue-ssl $app_name
-```
-
-#### log
-
-To view application's log
-
-```
-ssh polybox@host.com log $app_name
-```
-
-## -- Scaling --
-
-To scale the application
-
-### ps
-
-Show the process count
-
-```
-ssh polybox@host.com ps $app_name
-```
-
-### scale
-
-Scale processes
-
-```
-ssh polybox@host.com scale $app_name $proc=$count $proc2=$count2
-```
-
-ie: `ssh polybox@host.com scale site.com web=4`
-
-## -- Environment --
-
-To edit application's environment variables 
-
-#### envs
-
-Show ENV configuration for app
-
-```
-ssh polybox@host.com envs $app_name
-```
-
-#### setenv
-
-Set ENV config
-
-```
-ssh polybox@host.com setenv $app_name $KEY=$VAL $KEY2=$VAL2
-```
-
-#### delenv
-
-Delete a key from the environment var
-
-```
-ssh polybox@host.com delenv $app_name $KEY
-```
-
-
-
-## -- Misc --
-
-#### reload-all
-
-Reload all apps on the server
-
-```
-ssh polybox@host.com reload-all
-```
-
-#### stop-all
-
-Stop all apps on the server
-
-```
-ssh polybox@host.com stop-all
-```
-
-### x-update
-
-To update Polybox to the latest from Github
-
-```
-ssh polybox@host.com x-update
-```
-
-### Version
-
-To get Polybox's version
-
-```
-ssh polybox@host.com version
-```
-
----
-
 ## polybox.yml
 
+
 `polybox.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
+
+
+`polybox.yml` contains an array of all apps to be deploy, and they are identified by `name`.
+
+When setting up the remote, the `name` must match the `name` in the polybox.yml
 
 
 ```yml
@@ -500,19 +450,13 @@ apps:
 
 ```
 
-## Upgrade Polybox
 
-If you're already using Polybox, you can upgrade Polybox with: 
-
-```
-ssh polybox@host.com x-update
-```
 ---
 
 
 ## CHANGELOG
 
-- 0.2.0
+- 1.0.0
   - Rebranding Boxie to Polybox with Cardi B image, Okrrrrrr! (joke, joke)
   - Remove Python 2 support.
   - Recommend Ubuntu 20.04.
@@ -556,5 +500,9 @@ Credit: Polybox is a fork of **Piku** https://github.com/piku/piku. Great work a
 
 ---
 
-License: MIT - Copyright 2020-Forever Mardix
+Author: Mardix
+
+License: MIT 
+
+Copyright 2021 to Forever
 

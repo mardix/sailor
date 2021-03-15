@@ -2,7 +2,7 @@
 
 This is an example of a mono repo, where Polybox can deploy multiple apps from the same repo
 
-It uses Express/Node, Flask/Python to build both app
+It uses Express/Node, Flask/Python to build both app.
 
 ---
 
