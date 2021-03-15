@@ -120,10 +120,6 @@ NGINX_COMMON_FRAGMENT = """
   ssl_certificate_key $NGINX_ROOT/$APP.key;
   server_name         $NGINX_SERVER_NAME;
 
-  # These are not required under systemd - enable for debugging only
-  # access_log        $LOG_ROOT/$APP/access.log;
-  # error_log         $LOG_ROOT/$APP/error.log;
-  
   # Enable gzip compression
   gzip on;
   gzip_proxied any;
@@ -319,7 +315,7 @@ def install_acme_sh():
     if exists(ACME_ROOT):
         return
     echo("......-> Installing acme.sh", fg="green")
-    call("curl https://raw.githubusercontent.com/Neilpang/acme.sh/master/acme.sh | INSTALLONLINE=1  sh", cwd=BOX_ROOT, shell=True)
+    call("curl https://get.acme.sh | sh", cwd=BOX_ROOT, shell=True)
 
 
 def _get_env(app):
@@ -673,7 +669,8 @@ def spawn_app(app, deltas={}):
         'PATH': ':'.join([join(virtualenv_path, 'bin'), environ['PATH']]),
         'PWD': app_path,
         'VIRTUAL_ENV': virtualenv_path,
-        'SSL_LETSENCRYPT': True,
+        'SSL': True,
+        'SSL_ISSUER': 'letsencrypt',
         'HTTPS_ONLY': True,
         'AUTO_RESTART': False,
         'WSGI': True
@@ -693,6 +690,9 @@ def spawn_app(app, deltas={}):
 
     # SPAWN Env
     env.update(get_spawn_env(app))
+    
+    if env.get("HTTPS_ONLY") is True and env.get("SSL") is False:
+        env["SSL"] = True
 
     if 'web' in workers:
         # Pick a port if none defined
@@ -706,7 +706,7 @@ def spawn_app(app, deltas={}):
                 echo("......-> nginx {k:s} set to {v}".format(**locals()))
                 env[k] = v
 
-        # Set up nginx if we have NGINX_SERVER_NAME set
+        # NGINX: Set up nginx if we have NGINX_SERVER_NAME set
         if 'NGINX_SERVER_NAME' in env:
             nginx = command_output("nginx -V")
             nginx_ssl = "443 ssl"
@@ -726,14 +726,22 @@ def spawn_app(app, deltas={}):
             env['NGINX_SOCKET'] = "{BIND_ADDRESS:s}:{PORT:s}".format(**env)
             echo("......-> nginx will look for app '{}' on {}".format(app, env['NGINX_SOCKET']))
 
-            domain = env['NGINX_SERVER_NAME'].split()[0]
-            key = join(NGINX_ROOT, "%s.%s" % (app, 'key'))
-            crt = join(NGINX_ROOT, "%s.%s" % (app, 'crt'))
-
-            # LETSENCRYPT
-            if env.get("SSL_LETSENCRYPT") is True and exists(join(ACME_ROOT, "acme.sh")):
+            # SSL          
+            if env.get("SSL") is True:
+                if not exists(join(ACME_ROOT, "acme.sh"):
+                    echo("!!!!!!!FATAL ERROR!!!!!!!.", fg='red')
+                    echo("!!!!!!!FATAL ERROR: missing 'acme.sh' script for HTTPS", fg='red')
+                    echo("!!!!!!!FATAL ERROR: exited.", fg='red')
+                    exit(1)
+                    
+                domain = env['NGINX_SERVER_NAME'].split()[0]
+                key = join(NGINX_ROOT, "%s.%s" % (app, 'key'))
+                crt = join(NGINX_ROOT, "%s.%s" % (app, 'crt'))
+                
+                ssl_issuer = env.get("SSL_ISSUER", "letsencrypt") # letsencrypt|zerossl
                 acme = ACME_ROOT
                 www = ACME_WWW
+                
                 # if this is the first run there will be no nginx conf yet
                 # create a basic conf stub just to serve the acme auth
                 if not exists(nginx_conf):
@@ -741,8 +749,10 @@ def spawn_app(app, deltas={}):
                     buffer = expandvars(NGINX_ACME_FIRSTRUN_TEMPLATE, env)
                     with open(nginx_conf, "w") as h:
                         h.write(buffer)
+                    sleep(2)
+                    
                 if not exists(key) or not exists(join(ACME_ROOT, domain, domain + ".key")):
-                    echo("......-> getting letsencrypt certificate")
+                    echo("......-> getting '%s' ssl certificate" % ssl_issuer)
                     call('{acme:s}/acme.sh --issue -d {domain:s} -w {www:s}'.format(**locals()), shell=True)
                     call('{acme:s}/acme.sh --install-cert -d {domain:s} --key-file {key:s} --fullchain-file {crt:s}'.format(**locals()), shell=True)
                     if exists(join(ACME_ROOT, domain)) and not exists(join(ACME_WWW, app)):
@@ -750,34 +760,9 @@ def spawn_app(app, deltas={}):
                 else:
                     echo("......-> letsencrypt certificate already installed")
 
-            # fall back to creating self-signed certificate if acme failed
-            if not exists(key) or stat(crt).st_size == 0:
-                echo("......-> generating self-signed certificate")
-                call('openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 -subj "/C=US/ST=NY/L=New York/O=Polybox/OU=Self-Signed/CN={domain:s}" -keyout {key:s} -out {crt:s}'.format(
-                    **locals()), shell=True)
-
             # restrict access to server from CloudFlare IP addresses
             acl = []
-            if env.get('NGINX_CLOUDFLARE_ACL', 'false').lower() == 'true':
-                try:
-                    cf = json.loads(urlopen('https://api.cloudflare.com/client/v4/ips').read().decode("utf-8"))
-                    if cf['success'] == True:
-                        for i in cf['result']['ipv4_cidrs']:
-                            acl.append("allow {};".format(i))
-                        for i in cf['result']['ipv6_cidrs']:
-                            acl.append("allow {};".format(i))
-                        # allow access from controlling machine
-                        if 'SSH_CLIENT' in environ:
-                            remote_ip = environ['SSH_CLIENT'].split()[0]
-                            echo("......-> Adding your IP ({}) to nginx ACL".format(remote_ip))
-                            acl.append("allow {};".format(remote_ip))
-                        acl.extend(["allow 127.0.0.1;", "deny all;"])
-                except:
-                    cf = defaultdict()
-                    echo("......-> Could not retrieve CloudFlare IP ranges: {}".format(format_exc()), fg="red")
-
             env['NGINX_ACL'] = " ".join(acl)
-
             env['INTERNAL_NGINX_STATIC_MAPPINGS'] = ''
             env['INTERNAL_NGINX_STATIC_CLAUSES'] = ''
 
@@ -832,8 +817,8 @@ def spawn_app(app, deltas={}):
                 echo("!!!!!!!FATAL ERROR!!!!!!!", fg='red')
                 echo("!!!!!!!FATAL ERROR: [nginx config] {}".format(nginx_config_test), fg='red')
                 echo("!!!!!!!FATAL ERROR: removing broken nginx config.", fg='red')
-                #unlink(nginx_conf)
-                echo("!!!!!!!FATAL ERROR: exiting setup.", fg='red')
+                unlink(nginx_conf)
+                echo("!!!!!!!FATAL ERROR: exited.", fg='red')
                 exit(1)
 
     # Configured worker count
@@ -1052,15 +1037,19 @@ def delete_app_metrics(app):
 
 @click.group()
 def cli():
-    """ Polybox
+    """ 
+    
+:+:Polybox:+:
 
-    https://github.com/mardix/polybox/ """
+https://github.com/mardix/polybox/ 
+
+    """
     pass
 
 
 # --- User commands ---
 
-@cli.command("app:list")
+@cli.command("apps")
 def list_apps():
     """List all apps"""
     print_title("All apps")
@@ -1077,7 +1066,7 @@ def list_apps():
             running = False
             port = settings.get("PORT", "-")
             domain_name = settings.get('SERVER_NAME', '-')
-            ssl = "Y" if settings.get("SSL_LETSENCRYPT") is True else "-"
+            ssl = "Y" if settings.get("SSL") is True else "-"
             
             avg = metrics.get("avg", "-")
             rss = metrics.get("rss", "-")
@@ -1099,7 +1088,7 @@ def list_apps():
             data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
     print_table(data)
 
-@cli.command("env:set")
+@cli.command("setenv")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_config_set(app, settings):
@@ -1121,7 +1110,7 @@ def cmd_config_set(app, settings):
     deploy_app(app)
 
 
-@cli.command("env:del")
+@cli.command("delenv")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_config_unset(app, settings):
@@ -1139,7 +1128,7 @@ def cmd_config_unset(app, settings):
     deploy_app(app)
 
 
-@cli.command("env:list")
+@cli.command("envs")
 @click.argument('app')
 def cmd_config_live(app):
     """Show ENV config: [<app>] """
@@ -1152,7 +1141,7 @@ def cmd_config_live(app):
         echo("")      
         echo(open(env_file).read().strip(), fg='white') 
 
-@cli.command("app:deploy")
+@cli.command("deploy")
 @click.argument('app')
 def cmd_deploy(app):
     """Deploy app: [<app>]"""
@@ -1162,10 +1151,10 @@ def cmd_deploy(app):
     deploy_app(app)
 
 
-@cli.command("app:destroy")
+@cli.command("destroy")
 @click.argument('app')
 def cmd_destroy(app):
-    """Delete app: [<app>]"""
+    """Destroy app: [<app>]"""
     echo("**** WARNING ****", fg="red")
     echo("**** YOU ARE ABOUT TO DESTROY AN APP ****", fg="red")
 
@@ -1208,7 +1197,7 @@ def cmd_destroy(app):
         unlink(acme_link)
 
 
-@cli.command("app:log")
+@cli.command("log")
 @click.argument('app')
 def cmd_logs(app):
     """Read tail logs [<app>]"""
@@ -1223,7 +1212,7 @@ def cmd_logs(app):
         echo("No logs found for app '{}'.".format(app), fg='yellow')
 
 
-@cli.command("ps:list")
+@cli.command("ps")
 @click.argument('app')
 def cmd_ps(app):
     """Show process count: [<app>]"""
@@ -1240,7 +1229,7 @@ def cmd_ps(app):
         echo("Error: no workers found for app '%s'." % app, fg='red')
 
 
-@cli.command("ps:scale")
+@cli.command("scale")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_ps_scale(app, settings):
@@ -1268,7 +1257,7 @@ def cmd_ps_scale(app, settings):
     deploy_app(app, deltas)
 
 
-@cli.command("app:reload")
+@cli.command("reload")
 @click.argument('app')
 def cmd_reload(app):
     """Reload app: [<app>]"""
@@ -1280,6 +1269,24 @@ def cmd_reload(app):
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
 
+@cli.command("reissue-ssl")
+@click.argument('app')
+def cmd_reload(app):
+    """To reissue ssl to an app: [<app>]"""
+    echo("Reissuing app", fg="green")
+    check_app(app)
+    app = sanitize_app_name(app)
+    remove_nginx_conf(app)
+    cleanup_uwsgi_enabled_ini(app)
+    
+    # delete ssl
+    acme_link = join(ACME_WWW, app)
+    acme_certs = realpath(acme_link)
+    if exists(acme_certs):
+        rmtree(acme_certs)
+        unlink(acme_link)    
+    echo("......-> reloading '{}'...".format(app), fg='yellow')
+    spawn_app(app)
 
 @cli.command("reload-all")
 def cmd_reload_all():
@@ -1293,7 +1300,7 @@ def cmd_reload_all():
             echo("...-> reloading '{}'...".format(app), fg='yellow')
             spawn_app(app)
 
-@cli.command("app:stop")
+@cli.command("stop")
 @click.argument('app')
 def cmd_stop(app):
     """Stop app: [<app>]"""
@@ -1359,7 +1366,7 @@ def cmd_update():
     chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
     echo("...update completed!", fg="green")
 
-@cli.command("ssl-download")
+@cli.command("get-app-cert")
 @click.argument('app')
 def cmd_ssl_download(app):
     """Downloading SSL CERT & KEY"""

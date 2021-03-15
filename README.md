@@ -5,46 +5,13 @@
 
 ---
 
-**The tiniest PaaS that GIT push apps, micro-services and websites on your own servers or VPS. Okrrrrrr!**
+## The itty-bitty tool that `git push` and deploy apps, micro-services and websites on your own servers, like `Okrrrrrr!`
 
 ---
 
-**Polybox** is a utility to install on a host machine, that allows you to deploy multiple apps, micro-services, webites, run scripts and background workers on a single VPS (Digital Ocean, Linode, Hetzner).
+## Features
 
-**Polybox** follows a process similar to Heroku or Dokku where you Git push code to the host and **Polybox** will:
-
-- create an instance on the host machine
-- deploy the new code
-- create virtual environments for your application
-- get a free SSL from LetsEncrypt and assign it to your domain
-- execute scripts to be executed
-- put your application online
-- monitor the application
-- restart the application if it crashes
-
-
-**Polybox** supports deployment for:
-
-- Python (Flask/Django)
-- Nodejs (Express)
-- PHP
-- HTML (React/Vuejs/Static).
-- any of shell scripts
-
----
-
-### Why Polybox?
-
-Polybox is a simpler alternative to Docker containers or Dokku. It mainly deals with your application deployment, similar to Heroku. 
-
-Polybox takes away all the complexity of Docker Containers or Dokku and gives you something simpler to deploy your applications, similar to Heroku, along with SSL.
-
-
-
----
-
-### Features
-
+- Automatic HTTPS
 - Git Push deployment
 - Deploy multiple apps on a single server / VPS
 - Deploy multiple apps from a single repository
@@ -62,6 +29,39 @@ Polybox takes away all the complexity of Docker Containers or Dokku and gives yo
 
 ---
 
+## About
+
+**Polybox** is a utility to install on a host machine, that allows you to deploy multiple apps, micro-services, webites, run scripts and background workers on a single VPS (Digital Ocean, Linode, Hetzner).
+
+**Polybox** follows a process similar to Heroku or Dokku where you Git push code to the host and **Polybox** will:
+
+- create an instance on the host machine
+- deploy the new code
+- create virtual environments for your application
+- get a free SSL from LetsEncrypt and assign it to your domain
+- execute scripts to be executed
+- put your application online
+- monitor the application
+- restart the application if it crashes
+
+**Polybox** supports deployment for:
+
+- Python (Flask/Django)
+- Nodejs (Express)
+- PHP
+- HTML (React/Vuejs/Static).
+- any of shell scripts
+
+---
+
+### Why Polybox?
+
+Polybox is a simpler alternative to Docker containers or Dokku. It mainly deals with your application deployment, similar to Heroku. 
+
+Polybox takes away all the complexity of Docker Containers or Dokku and gives you something simpler to deploy your applications, similar to Heroku, along with SSL.
+
+---
+
 ### Requirements
 
 - Fresh server
@@ -73,11 +73,11 @@ Polybox takes away all the complexity of Docker Containers or Dokku and gives yo
 
 ### Languages Supported
 
-- [x] Python 
-- [x] Nodejs
-- [x] Static HTML
-- [x] PHP
-- [x] Any shell script
+- Python 
+- Nodejs
+- Static HTML
+- PHP
+- Any shell script
 
 ---
 
@@ -506,6 +506,7 @@ ssh polybox@host.com update
   - Added separate install process for Ubuntu 2018.04
   - Added custom index.html page
   - Added aplication/json in nginx
+  - No longer supports self-signed SSL
 
 - 0.1.0
   - Initial

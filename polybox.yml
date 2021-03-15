@@ -35,27 +35,15 @@ apps:
     # static_paths (array): specify list of static path to expose, [/url:path, ...]
     static_paths: 
 
+    # HTTPS + SSL
     # https_only (bool): when true (default), it will redirect http to https
     https_only: true
-
-    # threads (int): The total threads to use
-    threads: 4
-
-    # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
-    wsgi: true
-
-    # letsencrypt (bool) true(default)
-    ssl_letsencrypt: true
-
-    # nginx (object): nginx specific config. can be omitted
-    nginx:
-      cloudflare_acl: false
-      include_file: ''
     
-    # uwsgi (object): uwsgi specific config. can be omitted
-    uwsgi:
-      gevent: false
-      asyncio: false
+    # ssl (bool) true(default): to enable / disable ssl. It will be true if https_only is True
+    ssl: true
+    
+    # SSL issuer: letsencrypt(default)|zerossl
+    ssl_issuer: letsencrypt
 
     # env (object) custom environment variable
     env: 
@@ -92,3 +80,18 @@ apps:
       # worker* (string): command to run, with a name. The name doesn't matter.
       # it can be named anything
       worker: 
+        
+    # threads (int): The total threads to use
+    threads: 4
+
+    # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
+    wsgi: true
+
+    # nginx (object): nginx specific config. can be omitted
+    nginx:
+      include_file: ''
+    
+    # uwsgi (object): uwsgi specific config. can be omitted
+    uwsgi:
+      gevent: false
+      asyncio: false
