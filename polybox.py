@@ -315,7 +315,7 @@ def install_acme_sh():
     if exists(ACME_ROOT):
         return
     echo("......-> Installing acme.sh", fg="green")
-    call("curl https://get.acme.sh | sh", cwd=BOX_ROOT, shell=True)
+    call("curl https://get.acme.sh | sh -s", cwd=BOX_ROOT, shell=True)
 
 
 def _get_env(app):
@@ -728,7 +728,7 @@ def spawn_app(app, deltas={}):
 
             # SSL          
             if env.get("SSL") is True:
-                if not exists(join(ACME_ROOT, "acme.sh"):
+                if not exists(join(ACME_ROOT, "acme.sh")):
                     echo("!!!!!!!FATAL ERROR!!!!!!!.", fg='red')
                     echo("!!!!!!!FATAL ERROR: missing 'acme.sh' script for HTTPS", fg='red')
                     echo("!!!!!!!FATAL ERROR: exited.", fg='red')
@@ -1038,18 +1038,19 @@ def delete_app_metrics(app):
 @click.group()
 def cli():
     """ 
-    
+---------------------------------------------
+
 :+:Polybox:+:
 
 https://github.com/mardix/polybox/ 
 
+---------------------------------------------
     """
     pass
 
-
 # --- User commands ---
 
-@cli.command("apps")
+@cli.command("app")
 def list_apps():
     """List all apps"""
     print_title("All apps")
@@ -1273,13 +1274,12 @@ def cmd_reload(app):
 @click.argument('app')
 def cmd_reload(app):
     """To reissue ssl to an app: [<app>]"""
-    echo("Reissuing app", fg="green")
+    echo("Reissuing App SSL", fg="green")
     check_app(app)
     app = sanitize_app_name(app)
     remove_nginx_conf(app)
     cleanup_uwsgi_enabled_ini(app)
     
-    # delete ssl
     acme_link = join(ACME_WWW, app)
     acme_certs = realpath(acme_link)
     if exists(acme_certs):
@@ -1323,7 +1323,7 @@ def cmd_stop_all():
             echo("......-> '%s' stopped" % app, fg='yellow')
 
 
-@cli.command("set-ssh")
+@cli.command("x-set-ssh")
 @click.argument('public_key_file')
 def cmd_setup_ssh(public_key_file):
     """Set up a new SSH key (use - for stdin)"""
@@ -1349,13 +1349,13 @@ def cmd_setup_ssh(public_key_file):
     add_helper(public_key_file)
 
 
-@cli.command("version")
+@cli.command("x-version")
 def cmd_version():
     """ Get Version """
     echo("%s v.%s" % (NAME, VERSION), fg="green")
 
 
-@cli.command("update")
+@cli.command("x-update")
 def cmd_update():
     """ Update Polybox to the latest from Github """
     print_title("Updating")
@@ -1366,7 +1366,7 @@ def cmd_update():
     chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
     echo("...update completed!", fg="green")
 
-@cli.command("get-app-cert")
+#@cli.command("get-app-cert")
 @click.argument('app')
 def cmd_ssl_download(app):
     """Downloading SSL CERT & KEY"""

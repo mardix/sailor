@@ -234,7 +234,7 @@ AND PUSH YOUR CODE:
 
 Polybox communicates with your server via SSH, with the user name: `polybox`  
 
-ie: `ssh polybox@host.com`
+ie: `ssh polybox@[host.com]`
 
 ### General
 
@@ -243,111 +243,122 @@ ie: `ssh polybox@host.com`
 List all commands
 
 ```
-ssh polybox@host.com
+ssh polybox@[host.com]
 ```
 
-#### app:list
+## -- Apps --
+
+#### apps
 
 List  all apps
 
 ```
-ssh polybox@host.com app:list
+ssh polybox@host.com apps
 ```
 
-#### app:deploy
+
+#### deploy
 
 Deploy app. `$app_name` is the app name
 
 ```
-ssh polybox@host.com app:deploy $app_name
+ssh polybox@host.com deploy $app_name
 ```
 
-#### app:reload
+#### reload
 
 Reload an app
 
 ```
-ssh polybox@host.com app:reload $app_name
+ssh polybox@host.com reload $app_name
 ```
 
-#### app:stop
+#### stop
 
 Stop an app
 
 ```
-ssh polybox@host.com app:stop $app_name
+ssh polybox@host.com stop $app_name
 ```
 
-#### app:destroy
+#### destroy
 
 Delete an app
 
 ```
-ssh polybox@host.com app:destroy $app_name
+ssh polybox@host.com destroy $app_name
 ```
 
 
-### Scaling
+#### reissue-ssl
 
-To scale the application
-
-### ps:list
-
-Show the process count
+To reissue SSL
 
 ```
-ssh polybox@host.com ps:list $app_name
+ssh polybox@host.com reissue-ssl $app_name
 ```
 
-### ps:scale
-
-Scale processes
-
-```
-ssh polybox@host.com ps:scale $app_name $proc=$count $proc2=$count2
-```
-
-ie: `ssh polybox@host.com scale site.com web=4`
-
-### Environment
-
-To edit application's environment variables 
-
-#### env:list
-
-Show ENV configuration for app
-
-```
-ssh polybox@host.com env:list $app_name
-```
-
-#### env:set
-
-Set ENV config
-
-```
-ssh polybox@host.com env:set $app_name $KEY=$VAL $KEY2=$VAL2
-```
-
-#### env:del
-
-Delete a key from the environment var
-
-```
-ssh polybox@host.com env:del $app_name $KEY
-```
-
-### Log
-
-#### app:log
+#### log
 
 To view application's log
 
 ```
-ssh polybox@host.com app:log $app_name
+ssh polybox@host.com log $app_name
 ```
 
-### Other
+## -- Scaling --
+
+To scale the application
+
+### ps
+
+Show the process count
+
+```
+ssh polybox@host.com ps $app_name
+```
+
+### scale
+
+Scale processes
+
+```
+ssh polybox@host.com scale $app_name $proc=$count $proc2=$count2
+```
+
+ie: `ssh polybox@host.com scale site.com web=4`
+
+## -- Environment --
+
+To edit application's environment variables 
+
+#### envs
+
+Show ENV configuration for app
+
+```
+ssh polybox@host.com envs $app_name
+```
+
+#### setenv
+
+Set ENV config
+
+```
+ssh polybox@host.com setenv $app_name $KEY=$VAL $KEY2=$VAL2
+```
+
+#### delenv
+
+Delete a key from the environment var
+
+```
+ssh polybox@host.com delenv $app_name $KEY
+```
+
+
+
+## -- Misc --
 
 #### reload-all
 
@@ -365,12 +376,12 @@ Stop all apps on the server
 ssh polybox@host.com stop-all
 ```
 
-### Update
+### x-update
 
 To update Polybox to the latest from Github
 
 ```
-ssh polybox@host.com update
+ssh polybox@host.com x-update
 ```
 
 ### Version
@@ -430,18 +441,20 @@ apps:
     # https_only (bool): when true (default), it will redirect http to https
     https_only: true
 
+    # ssl (bool) true(default): to enable / disable ssl. It will be true if https_only is True
+    ssl: true
+    
+    # SSL issuer: letsencrypt(default)|zerossl
+    ssl_issuer: letsencrypt
+    
     # threads (int): The total threads to use
     threads: 4
 
     # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
     wsgi: true
 
-    # letsencrypt (bool) true(default)
-    ssl_letsencrypt: true
-
     # nginx (object): nginx specific config. can be omitted
     nginx:
-      cloudflare_acl: false
       include_file: ''
     
     # uwsgi (object): uwsgi specific config. can be omitted
