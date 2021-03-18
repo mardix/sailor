@@ -55,7 +55,7 @@ chmod 755 install.sh
 
 #### 3. Setup  Git on local repo
 
-On your local machine, point a Git remote to your Polybase server (set in step 2), with **`polybox`** as username.
+On your local machine, point a Git remote to your Polybox server (set in step 2), with **`polybox`** as username.
 
 Format: `git remote add polybox polybox@[HOST]:[APP_NAME]`
 
