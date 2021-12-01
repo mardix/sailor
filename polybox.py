@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -753,7 +753,7 @@ def spawn_app(app, deltas={}):
                     
                 if not exists(key) or not exists(join(ACME_ROOT, domain, domain + ".key")):
                     echo("......-> getting '%s' ssl certificate" % ssl_issuer)
-                    call('{acme:s}/acme.sh --issue -d {domain:s} -w {www:s}'.format(**locals()), shell=True)
+                    call('{acme:s}/acme.sh --issue -d {domain:s} -w {www:s} --server {ssl_issuer:s}'.format(**locals()), shell=True)
                     call('{acme:s}/acme.sh --install-cert -d {domain:s} --key-file {key:s} --fullchain-file {crt:s}'.format(**locals()), shell=True)
                     if exists(join(ACME_ROOT, domain)) and not exists(join(ACME_WWW, app)):
                         symlink(join(ACME_ROOT, domain), join(ACME_WWW, app))
