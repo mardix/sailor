@@ -1261,7 +1261,7 @@ def cmd_reload(app):
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
 
-@cli.command("apps:reload-all")
+@cli.command("reload:all")
 def cmd_reload_all():
     """Reload all apps"""
     echo("Reloading all apps", fg="green")
@@ -1284,7 +1284,7 @@ def cmd_stop(app):
     cleanup_uwsgi_enabled_ini(app)
     echo("......-> '%s' stopped" % app, fg='yellow')
 
-@cli.command("apps:stop-all")
+@cli.command("stop:all")
 def cmd_stop_all():
     """Stop all apps"""
     echo("Stopping all apps", fg="green")
