@@ -1035,6 +1035,7 @@ def delete_app_metrics(app):
     if not exists(metrics_dir):
         makedirs(metrics_dir)
 
+
 # === CLI commands ===
 
 @click.group()
@@ -1049,6 +1050,45 @@ https://github.com/mardix/polybox/
 ---------------------------------------------
     """
     pass
+
+def _delete_app(app, delete_app=True, remove_certs=True):
+    # on destroy
+    run_app_scripts(app, "destroy")
+    l = [SETTINGS_ROOT, LOG_ROOT, METRICS_ROOT]
+    if delete_app:
+        l.append(APP_ROOT)
+        l.append(GIT_ROOT)
+        l.append(ENV_ROOT)
+        
+    for p in [join(x, app) for x in l]:
+        if exists(p):
+            rmtree(p)
+
+    for p in [join(x, '{}*.ini'.format(app)) for x in [UWSGI_AVAILABLE, UWSGI_ENABLED]]:
+        g = glob(p)
+        if len(g):
+            for f in g:
+                remove(f)
+                
+    nginx_l = ['conf', 'sock']
+    
+    if remove_certs:
+        nginx_l.append('key')
+        nginx_l.append('cert')
+    
+    nginx_files = [join(NGINX_ROOT, "{}.{}".format(app, x)) for x in nginx_l]
+    for f in nginx_files:
+        if exists(f):
+            remove(f)
+
+    if remove_certs:
+        acme_link = join(ACME_WWW, app)
+        acme_certs = realpath(acme_link)
+        if exists(acme_certs):
+            rmtree(acme_certs)
+            unlink(acme_link)
+
+
 
 # --- User commands ---
 
@@ -1091,59 +1131,6 @@ def list_apps():
             data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
     print_table(data)
 
-#@cli.command("setenv")
-@click.argument('app')
-@click.argument('settings', nargs=-1)
-def cmd_config_set(app, settings):
-    """Set ENV config: [<app> [{KEY1}={VAL1}, ...]]"""
-
-    echo("Update config for %s" % app, fg="green")
-    check_app(app)
-    app = sanitize_app_name(app)
-    env = read_settings(app, 'CUSTOM')
-    for s in settings:
-        try:
-            k, v = map(lambda x: x.strip(), s.split("=", 1))
-            env[k] = v
-            echo("......-> set {k:s}={v} for '{app:s}'".format(**locals()), fg='white')
-        except:
-            echo("Error: malformed setting '{}'".format(s), fg='red')
-            return
-    write_settings(app, 'CUSTOM', env)
-    deploy_app(app)
-
-
-
-#@cli.command("delenv")
-@click.argument('app')
-@click.argument('settings', nargs=-1)
-def cmd_config_unset(app, settings):
-    """Delete ENV config: [<app> {KEY}] """
-
-    echo("Update config for %s" % app, fg="green")
-    check_app(app)
-    app = sanitize_app_name(app)
-    env = read_settings(app, 'CUSTOM')
-    for s in settings:
-        if s in env:
-            del env[s]
-            echo("......-> unset {} for '{}'".format(s, app), fg='white')
-    write_settings(app, 'CUSTOM', env)
-    deploy_app(app)
-
-
-#@cli.command("envs")
-@click.argument('app')
-def cmd_config_live(app):
-    """Show ENV config: [<app>] """
-    print_title("Env Config", app=app)
-    check_app(app)
-    app = sanitize_app_name(app)
-    env_file = join(SETTINGS_ROOT, app, 'ENV')
-
-    if exists(env_file):
-        echo("")      
-        echo(open(env_file).read().strip(), fg='white') 
 
 @cli.command("deploy")
 @click.argument('app')
@@ -1152,6 +1139,7 @@ def cmd_deploy(app):
     echo("Deploy app", fg="green")
     check_app(app)
     app = sanitize_app_name(app)
+    _delete_app(app, delete_app=False, remove_certs=False)
     deploy_app(app)
 
 
@@ -1170,35 +1158,7 @@ def cmd_destroy(app):
     if not click.confirm("Are you really sure?"):
         exit(1)
 
-    # on destroy
-    run_app_scripts(app, "destroy")
-
-    for p in [join(x, app) for x in [APP_ROOT, GIT_ROOT, ENV_ROOT, SETTINGS_ROOT, 
-                                        LOG_ROOT, METRICS_ROOT]]:
-        if exists(p):
-            echo("Removing folder '{}'".format(p), fg='yellow')
-            rmtree(p)
-
-    for p in [join(x, '{}*.ini'.format(app)) for x in [UWSGI_AVAILABLE, UWSGI_ENABLED]]:
-        g = glob(p)
-        if len(g):
-            for f in g:
-                echo("Removing file '{}'".format(f), fg='yellow')
-                remove(f)
-
-    nginx_files = [join(NGINX_ROOT, "{}.{}".format(app, x)) for x in ['conf', 'sock', 'key', 'crt']]
-    for f in nginx_files:
-        if exists(f):
-            echo("Removing file '{}'".format(f), fg='yellow')
-            remove(f)
-
-    acme_link = join(ACME_WWW, app)
-    acme_certs = realpath(acme_link)
-    if exists(acme_certs):
-        echo("Removing folder '{}'".format(acme_certs), fg='yellow')
-        rmtree(acme_certs)
-        echo("Removing file '{}'".format(acme_link), fg='yellow')
-        unlink(acme_link)
+    _delete_app(app)
 
 
 @cli.command("log")
