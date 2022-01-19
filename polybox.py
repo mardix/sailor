@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.0"
+VERSION = "1.1.0-b.01"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -1091,7 +1091,7 @@ def list_apps():
             data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
     print_table(data)
 
-@cli.command("setenv")
+#@cli.command("setenv")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_config_set(app, settings):
@@ -1113,7 +1113,8 @@ def cmd_config_set(app, settings):
     deploy_app(app)
 
 
-@cli.command("delenv")
+
+#@cli.command("delenv")
 @click.argument('app')
 @click.argument('settings', nargs=-1)
 def cmd_config_unset(app, settings):
@@ -1131,7 +1132,7 @@ def cmd_config_unset(app, settings):
     deploy_app(app)
 
 
-@cli.command("envs")
+#@cli.command("envs")
 @click.argument('app')
 def cmd_config_live(app):
     """Show ENV config: [<app>] """
@@ -1218,19 +1219,28 @@ def cmd_logs(app):
 @cli.command("ps")
 @click.argument('app')
 def cmd_ps(app):
-    """Show process count: [<app>]"""
+    """Show status: [<app>]"""
 
-    print_title("Process", app=app)
     check_app(app)
     app = sanitize_app_name(app)
     env = read_settings(app, 'SCALING')
     if env:
+        print(":: Process")
         data = [[k, v] for k, v in env.items()]
         data.insert(0, ["Process", "Size"])
-        print_table(data)    
+        print_table(data)  
+        
+    env_file = join(SETTINGS_ROOT, app, 'ENV')
+    if exists(env_file):
+        print()
+        print("-" * 25)    
+        echo(":: Envs")
+        echo("")   
+        echo(open(env_file).read().strip(), fg='white') 
+        print("")             
     else:
         echo("Error: no workers found for app '%s'." % app, fg='red')
-
+    print("-" * 80)
 
 @cli.command("scale")
 @click.argument('app')
@@ -1360,7 +1370,7 @@ def cmd_version():
 @cli.command("x:update")
 @click.argument('branch',required=False)
 def cmd_update(branch="master"):
-    """ Update Polybox to the latest from Github """
+    """ Update Polybox to the latest from Github. x:update $branch """
     print_title("Updating Polybox...")
     url = "https://raw.githubusercontent.com/mardix/polybox/%s/polybox.py" % branch
     echo("...downloading: 'polybox.py' - on branch: %s " % branch)
