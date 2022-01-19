@@ -1097,12 +1097,11 @@ def list_apps():
     """List all apps"""
     print_title("All apps")
     enabled = {a.split("___")[0] for a in listdir(UWSGI_ENABLED) if "___" in a}
-    data = [["Name", "Server Name", "Runtime", "Running", "Web", "Port", "SSL", "Workers", "AVG", "RSS", "VSZ", "TX"]]
     for app in listdir(APP_ROOT):
         if not app.startswith((".", "_")):
             runtime = get_app_runtime(app)
             workers = get_app_processes(app)
-            metrics = get_app_metrics(app)
+            #metrics = get_app_metrics(app)
             settings = read_settings(app, 'ENV')
 
             nginx_file = join(NGINX_ROOT, "%s.conf" % app)
@@ -1111,25 +1110,29 @@ def list_apps():
             domain_name = settings.get('SERVER_NAME', '-')
             ssl = "Y" if settings.get("SSL") is True else "-"
             
-            avg = metrics.get("avg", "-")
-            rss = metrics.get("rss", "-")
-            vsz = metrics.get("vsz", "-")
-            tx = metrics.get("tx", "-")
+            # avg = metrics.get("avg", "-")
+            # rss = metrics.get("rss", "-")
+            # vsz = metrics.get("vsz", "-")
+            # tx = metrics.get("tx", "-")
 
             workers_len = len(workers.keys()) if workers else 0 
-            web_len = "-" 
+            runtime == True if "static" and exists(nginx_file) else app in enabled
+            status = "running" if running else "-"
+            
+            print("-" * 40)
+            print("Name: ", app)
+            print("Server Name: ", domain_name)
+            print("Runtime: ", runtime)
+            print("Status: ", status)
             if "web" in workers:
-                web_len = "Y"
+                print("WEB Process: Yes")
+                print("Port: ", port)
                 workers_len = workers_len - 1
-            if runtime == "static":
-                if exists(nginx_file):
-                    running = True
-            else:
-                running = app in enabled
-            status = "Y" if running else "-"
-
-            data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
-    print_table(data)
+            print("Workers: ", workers_len)
+            print("")
+            print("*" * 40)
+            #data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
+    #print_table(data)
 
 
 @cli.command("deploy")
@@ -1187,10 +1190,10 @@ def cmd_logs(app):
         echo("No logs found for app '{}'.".format(app), fg='yellow')
 
 
-@cli.command("ps")
+@cli.command("info")
 @click.argument('app')
 def cmd_ps(app):
-    """Show status: [<app>]"""
+    """Show app info: [<app>]"""
 
     check_app(app)
     app = sanitize_app_name(app)
@@ -1240,10 +1243,7 @@ def cmd_ps_scale(app, settings):
             return
     deploy_app(app, deltas)
 
-
-
-
-@cli.command("reissue-ssl")
+@cli.command("ssl:reset")
 @click.argument('app')
 def cmd_reload(app):
     """To reissue ssl to an app: [<app>]"""
