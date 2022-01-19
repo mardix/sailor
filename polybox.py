@@ -845,7 +845,7 @@ def spawn_worker(app, kind, command, env, ordinal=1):
         ('metrics-dir',         metrics_path),
         ('uid',                 getpwuid(getuid()).pw_name),
         ('gid',                 getgrgid(getgid()).gr_name),
-        ('logfile-chown',       '%s:%s' % (getpwuid(getuid()).pw_name, getgrgid(getgid()).gr_name))
+        ('logfile-chown',       '%s:%s' % (getpwuid(getuid()).pw_name, getgrgid(getgid()).gr_name)),
         ('logfile-chmod',       640)
     ]
 
