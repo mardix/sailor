@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.0-b.02"
+VERSION = "1.1.0-b.02" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
