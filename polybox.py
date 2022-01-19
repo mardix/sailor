@@ -1109,7 +1109,7 @@ def list_apps():
             domain_name = settings.get('SERVER_NAME', '-')
 
             workers_len = len(workers.keys()) if workers else 0 
-            running== True if "static" and exists(nginx_file) else app in enabled
+            running== True if (("static" and exists(nginx_file)) or app in enabled) else app in enabled
             status = "running" if running else "-"
             
             print("*" * 40)
