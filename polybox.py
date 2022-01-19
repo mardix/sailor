@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.0-b.01"
+VERSION = "1.1.0-b.02"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -1051,7 +1051,7 @@ https://github.com/mardix/polybox/
     """
     pass
 
-def _show_info(app, enabled_files, show_workers=True, show_metrics=False, show_envs=False):
+def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_envs=False):
     runtime = get_app_runtime(app)
     workers = get_app_processes(app)
     settings = read_settings(app, 'ENV')
