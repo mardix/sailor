@@ -1107,8 +1107,6 @@ def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_
             print("")             
         else:
             print("Error: no workers found for app '%s'." % app)
-            
-    
     print()
     
 # --- User commands ---
@@ -1120,9 +1118,8 @@ def list_apps():
     enabled_files= {a.split("___")[0] for a in listdir(UWSGI_ENABLED) if "___" in a}
     for app in listdir(APP_ROOT):
         if not app.startswith((".", "_")):
-            print("-" * 40)
             _show_info(app, enabled_files=enabled_files)
-            print()
+
 
 @cli.command("deploy")
 @click.argument('app')
