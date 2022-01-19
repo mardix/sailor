@@ -388,6 +388,33 @@ def get_app_config(app):
 def get_app_env(app):
     return get_config(app).get("env", {})
 
+
+def human_size(fsize, units=[' bytes','KB','MB','GB','TB', 'PB', 'EB']): 
+    return "{:.2f}{}".format(float(fsize), units[0]) if fsize < 1024 else human_size(fsize / 1024, units[1:])
+
+def get_app_metrics(app):
+    metrics_dir = join(METRICS_ROOT, app)
+    met = {
+        "avg": "core.avg_response_time",
+        "rss": "rss_size",
+        "vsz": "vsz_size",
+        "tx":  "core.total_tx"
+    }
+    metrics = {}
+    for fk, fv in met.items():
+        f2 = join(metrics_dir, fv)
+        try:
+            if exists(f2):
+                with open(f2) as f:
+                    v = f.read().strip().split("\n")
+                    metrics[fk] = human_size(int(v[0])) if len(v) > 1 else "-"
+            else:
+                metrics[fk] = "-"            
+        except:
+            pass
+
+    return metrics
+    
 def get_app_runtime(app):
     app_path = join(APP_ROOT, app)
     config = get_app_config(app)
@@ -1039,11 +1066,18 @@ def list_apps():
             workers = get_app_processes(app)
             settings = read_settings(app, 'ENV')
 
+
+            metrics = get_app_metrics(app)
+            avg = metrics.get("avg", "-")
+            rss = metrics.get("rss", "-")
+            vsz = metrics.get("vsz", "-")
+            tx = metrics.get("tx", "-")
+            
+
             nginx_file = join(NGINX_ROOT, "%s.conf" % app)
             running = False
             port = settings.get("PORT", "-")
             domain_name = settings.get('SERVER_NAME', '-')
-
             workers_len = len(workers.keys()) if workers else 0 
             running== True if (("static" and exists(nginx_file)) or app in enabled) else app in enabled
             status = "running" if running else "-"
@@ -1051,14 +1085,19 @@ def list_apps():
             print("*" * 40)
             print("-" * 40)
             print("Name: ", app)
-            print("Server Name: ", domain_name)
             print("Runtime: ", runtime)
             print("Status: ", status)
             if "web" in workers:
                 print("Web: Yes")
+                print("Server Name: ", domain_name)
                 print("Port: ", port)
                 workers_len = workers_len - 1
             print("Workers: ", workers_len)
+            print("Metrics:")
+            print("\t AVG: ", avg)
+            print("\t RSS: ", rss)
+            print("\t VSZ: ", vsz)
+            print("\t TX: ", tx)
             print()
 
 @cli.command("deploy")
