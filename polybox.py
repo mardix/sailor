@@ -1101,24 +1101,18 @@ def list_apps():
         if not app.startswith((".", "_")):
             runtime = get_app_runtime(app)
             workers = get_app_processes(app)
-            #metrics = get_app_metrics(app)
             settings = read_settings(app, 'ENV')
 
             nginx_file = join(NGINX_ROOT, "%s.conf" % app)
             running = False
             port = settings.get("PORT", "-")
             domain_name = settings.get('SERVER_NAME', '-')
-            ssl = "Y" if settings.get("SSL") is True else "-"
-            
-            # avg = metrics.get("avg", "-")
-            # rss = metrics.get("rss", "-")
-            # vsz = metrics.get("vsz", "-")
-            # tx = metrics.get("tx", "-")
 
             workers_len = len(workers.keys()) if workers else 0 
-            runtime == True if "static" and exists(nginx_file) else app in enabled
+            running== True if "static" and exists(nginx_file) else app in enabled
             status = "running" if running else "-"
             
+            print("*" * 40)
             print("-" * 40)
             print("Name: ", app)
             print("Server Name: ", domain_name)
@@ -1129,8 +1123,7 @@ def list_apps():
                 print("Port: ", port)
                 workers_len = workers_len - 1
             print("Workers: ", workers_len)
-            print("")
-            print("*" * 40)
+            print()
             #data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
     #print_table(data)
 
