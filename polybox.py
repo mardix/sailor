@@ -1119,7 +1119,7 @@ def list_apps():
             print("Runtime: ", runtime)
             print("Status: ", status)
             if "web" in workers:
-                print("WEB Process: Yes")
+                print("Web: Yes")
                 print("Port: ", port)
                 workers_len = workers_len - 1
             print("Workers: ", workers_len)
