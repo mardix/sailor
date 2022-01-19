@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.0.1"
+VERSION = "1.1.0"
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -908,6 +908,8 @@ def spawn_worker(app, kind, command, env, ordinal=1):
         ('logto',               '{log_file:s}.{ordinal:d}.log'.format(**locals())),
         ('log-backupname',      '{log_file:s}.{ordinal:d}.log.old'.format(**locals())),
         ('metrics-dir',         metrics_path),
+        ('uid',                 getpwuid(getuid()).pw_name),
+        ('gid',                 getgrgid(getgid()).gr_name),
     ]
 
     http = '{BIND_ADDRESS:s}:{PORT:s}'.format(**env)
@@ -1050,7 +1052,7 @@ https://github.com/mardix/polybox/
 
 # --- User commands ---
 
-@cli.command("app")
+@cli.command("apps")
 def list_apps():
     """List all apps"""
     print_title("All apps")
@@ -1349,18 +1351,19 @@ def cmd_setup_ssh(public_key_file):
     add_helper(public_key_file)
 
 
-@cli.command("x-version")
+@cli.command("x:version")
 def cmd_version():
     """ Get Version """
     echo("%s v.%s" % (NAME, VERSION), fg="green")
 
 
-@cli.command("x-update")
-def cmd_update():
+@cli.command("x:update")
+@click.argument('branch',required=False)
+def cmd_update(branch="master"):
     """ Update Polybox to the latest from Github """
-    print_title("Updating")
-    url = "https://raw.githubusercontent.com/mardix/polybox/master/polybox.py"
-    echo("...downloading 'polybox.py' from github")
+    print_title("Updating Polybox...")
+    url = "https://raw.githubusercontent.com/mardix/polybox/%s/polybox.py" % branch
+    echo("...downloading: 'polybox.py' - on branch: %s " % branch)
     unlink(BOX_SCRIPT)
     urllib.request.urlretrieve(url, BOX_SCRIPT)
     chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)

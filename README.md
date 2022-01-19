@@ -456,6 +456,14 @@ apps:
 
 ## CHANGELOG
 
+- 1.1.0
+  - renamed command: 'app' -> 'apps'
+  - allow to x:update from a branch
+  - WIP:remove envrionment settings. Can now be added in the yml file
+
+- 1.0.1
+  - fixed letsencrypt issue
+
 - 1.0.0
   - Rebranding Boxie to Polybox with Cardi B image, Okrrrrrr! (joke, joke)
   - Remove Python 2 support.
