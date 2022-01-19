@@ -840,13 +840,13 @@ def spawn_worker(app, kind, command, env, ordinal=1):
         ('enable-threads',      env.get('UWSGI_ENABLE_THREADS', 'true').lower()),
         ('log-x-forwarded-for', env.get('UWSGI_LOG_X_FORWARDED_FOR', 'false').lower()),
         ('log-maxsize',         env.get('UWSGI_LOG_MAXSIZE', UWSGI_LOG_MAXSIZE)),
-        ('logto',               '{log_file:s}.{ordinal:d}.log'.format(**locals())),
+        ('logto2',               '{log_file:s}.{ordinal:d}.log'.format(**locals())),
         ('log-backupname',      '{log_file:s}.{ordinal:d}.log.old'.format(**locals())),
         ('metrics-dir',         metrics_path),
         ('uid',                 getpwuid(getuid()).pw_name),
         ('gid',                 getgrgid(getgid()).gr_name),
         ('logfile-chown',       '%s:%s' % (getpwuid(getuid()).pw_name, getgrgid(getgid()).gr_name)),
-        ('logfile-chmod',       640)
+        ('logfile-chmod',       '640')
     ]
 
     http = '{BIND_ADDRESS:s}:{PORT:s}'.format(**env)
@@ -973,14 +973,18 @@ def delete_app_metrics(app):
         makedirs(metrics_dir)
 
 def _delete_app(app, delete_app=True, remove_certs=True):
+    
     # on destroy
     run_app_scripts(app, "destroy")
+    
     l = [SETTINGS_ROOT, LOG_ROOT, METRICS_ROOT]
     if delete_app:
-        l.append(APP_ROOT)
-        l.append(GIT_ROOT)
-        l.append(ENV_ROOT)
+        l.extend([APP_ROOT, GIT_ROOT, ENV_ROOT])
         
+    nginx_l = ['conf', 'sock']
+    if remove_certs:
+        nginx_l.extend(['key', 'cert'])
+                
     for p in [join(x, app) for x in l]:
         if exists(p):
             rmtree(p)
@@ -990,13 +994,7 @@ def _delete_app(app, delete_app=True, remove_certs=True):
         if len(g):
             for f in g:
                 remove(f)
-                
-    nginx_l = ['conf', 'sock']
-    
-    if remove_certs:
-        nginx_l.append('key')
-        nginx_l.append('cert')
-    
+
     nginx_files = [join(NGINX_ROOT, "{}.{}".format(app, x)) for x in nginx_l]
     for f in nginx_files:
         if exists(f):
