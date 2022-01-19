@@ -1051,40 +1051,77 @@ https://github.com/mardix/polybox/
     """
     pass
 
+def _show_info(app, enabled_files, show_workers=True, show_metrics=False, show_envs=False):
+    runtime = get_app_runtime(app)
+    workers = get_app_processes(app)
+    settings = read_settings(app, 'ENV')
 
-
+    nginx_file = join(NGINX_ROOT, "%s.conf" % app)
+    running = False
+    port = settings.get("PORT", "-")
+    domain_name = settings.get('SERVER_NAME', '-')
+    workers_len = len(workers.keys()) if workers else 0 
+    running = True if (("static" and exists(nginx_file)) or app in enabled_files) else app in enabled_files
+    status = "running" if running else "-"
+    
+    print("*" * 40)
+    print("-" * 40)
+    print("Name: ", app)
+    print("Runtime: ", runtime)
+    print("Status: ", status)
+    if "web" in workers:
+        print("Web: Yes")
+        print("Server Name: ", domain_name)
+        print("Port: ", port)
+        workers_len = workers_len - 1
+    print("Workers: ", workers_len)
+        
+    if show_metrics:
+        metrics = get_app_metrics(app)
+        avg = metrics.get("avg", "-")
+        rss = metrics.get("rss", "-")
+        vsz = metrics.get("vsz", "-")
+        tx = metrics.get("tx", "-") 
+        print()     
+        print(":: Metrics")
+        print("  AVG: ", avg)
+        print("  RSS: ", rss)
+        print("  VSZ: ", vsz)
+        print("  TX: ", tx)
+    
+    if show_workers:
+        env = read_settings(app, 'SCALING')
+        if env:
+            print()      
+            print(":: Processes workers")
+            for k, v in env.items():
+                print("  %s: %s" % (k, v)) 
+      
+    if show_envs:  
+        env_file = join(SETTINGS_ROOT, app, 'ENV')
+        if exists(env_file):
+            print()   
+            print(":: Envs")
+            print("")   
+            print(open(env_file).read().strip()) 
+            print("")             
+        else:
+            print("Error: no workers found for app '%s'." % app)
+            
+    
+    print()
+    
 # --- User commands ---
 
 @cli.command("apps")
 def list_apps():
     """List all apps"""
     print_title("All apps")
-    enabled = {a.split("___")[0] for a in listdir(UWSGI_ENABLED) if "___" in a}
+    enabled_files= {a.split("___")[0] for a in listdir(UWSGI_ENABLED) if "___" in a}
     for app in listdir(APP_ROOT):
         if not app.startswith((".", "_")):
-            runtime = get_app_runtime(app)
-            workers = get_app_processes(app)
-            settings = read_settings(app, 'ENV')
-
-            nginx_file = join(NGINX_ROOT, "%s.conf" % app)
-            running = False
-            port = settings.get("PORT", "-")
-            domain_name = settings.get('SERVER_NAME', '-')
-            workers_len = len(workers.keys()) if workers else 0 
-            running== True if (("static" and exists(nginx_file)) or app in enabled) else app in enabled
-            status = "running" if running else "-"
-            
-            print("*" * 40)
             print("-" * 40)
-            print("Name: ", app)
-            print("Runtime: ", runtime)
-            print("Status: ", status)
-            if "web" in workers:
-                print("Web: Yes")
-                print("Server Name: ", domain_name)
-                print("Port: ", port)
-                workers_len = workers_len - 1
-            print("Workers: ", workers_len)
+            _show_info(app, enabled_files=enabled_files)
             print()
 
 @cli.command("deploy")
@@ -1145,39 +1182,11 @@ def cmd_logs(app):
 @click.argument('app')
 def cmd_info(app):
     """Show app info: [<app>]"""
-
+    
+    enabled_files= {a.split("___")[0] for a in listdir(UWSGI_ENABLED) if "___" in a}
     check_app(app)
     app = sanitize_app_name(app)
-    metrics = get_app_metrics(app)
-    avg = metrics.get("avg", "-")
-    rss = metrics.get("rss", "-")
-    vsz = metrics.get("vsz", "-")
-    tx = metrics.get("tx", "-")    
-    
-    env = read_settings(app, 'SCALING')
-    if env:
-        print()
-        print("-" * 25)        
-        print(":: Processes workers")
-        for k, v in env.items():
-            print("  %s: %s" % (k, v)) 
-            
-    print(":: Metrics")
-    print("  AVG: ", avg)
-    print("  RSS: ", rss)
-    print("  VSZ: ", vsz)
-    print("  TX: ", tx)
-            
-    env_file = join(SETTINGS_ROOT, app, 'ENV')
-    if exists(env_file):
-        print()
-        print("-" * 25)    
-        print(":: Envs")
-        print("")   
-        print(open(env_file).read().strip()) 
-        print("")             
-    else:
-        print("Error: no workers found for app '%s'." % app)
+    _show_info(app, enabled_files, show_workers=True, show_metrics=True, show_envs=True)
     print("-" * 80)
 
 @cli.command("scale")
