@@ -218,36 +218,6 @@ INTERNAL_NGINX_STATIC_CLAUSES = """
 """
 # -----------------------------------------------------------------------------
 
-def print_table(table, with_header=True):
-    """
-    To print data in table.
-    :param table: list of lists 
-    :param with_header: True if the first row is the header
-    table = [
-        ["ABC", "Man Utd", "Man City", "T Hotspur"],
-        ["Man Utd", 1, 0, 0],
-        ["Man City", 1, 1, 0],
-        ["T Hotspur", 0, 1, 2],
-    ]
-    print_table(table)
-    """
-    longest_cols = [
-        (max([len(str(row[i])) for row in table]) + 3)
-        for i in range(len(table[0]))
-        ]
-    cols_size_sum = sum(longest_cols)
-    row_format = "".join(["{:<" + str(longest_col) + "}" for longest_col in longest_cols])
-    line = "-" * cols_size_sum
-    if with_header:
-        headers = table.pop(0)
-        print(line)
-        print(row_format.format(*headers))
-        print(line)
-    for row in table:
-        print(row_format.format(*row))
-    print(line)
-
-
 def print_title(title=None, app=None):
     print("-" * 80)
     print("Polybox v%s" % VERSION)
@@ -256,19 +226,6 @@ def print_title(title=None, app=None):
     if title:
         print(title)
     print(" ")
-
-
-def human_size(n):
-    # G
-    if n >= (1024*1024*1024):
-        return "%.1fG" % (n/(1024*1024*1024))
-    # M
-    if n >= (1024*1024):
-        return "%.1fM" % (n/(1024*1024))
-    # K
-    if n >= 1024:
-        return "%.1fK" % (n/1024)
-    return "%d" % n
 
 
 def sanitize_app_name(app):
@@ -431,25 +388,6 @@ def get_app_config(app):
 def get_app_env(app):
     return get_config(app).get("env", {})
 
-def get_app_metrics(app):
-    metrics_dir = join(METRICS_ROOT, app)
-    met = {
-        "avg": "core.avg_response_time",
-        "rss": "rss_size",
-        "vsz": "vsz_size",
-        "tx":  "core.total_tx"
-    }
-    metrics = {}
-    for fk, fv in met.items():
-        f2 = join(metrics_dir, fv)
-        if exists(f2):
-            with open(f2) as f:
-                v = f.read().strip().split("\n")
-                metrics[fk] = human_size(int(v[0])) if len(v) > 1 else "-"
-        else:
-            metrics[fk] = "-"
-    return metrics
-
 def get_app_runtime(app):
     app_path = join(APP_ROOT, app)
     config = get_app_config(app)
@@ -519,9 +457,6 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
             for p in ensure_paths:
                 if not exists(p):
                     makedirs(p)            
-
-            # Delete app metrics 
-            delete_app_metrics(app)
 
             runtime = get_app_runtime(app)
             env2 = get_app_config(app)
@@ -910,6 +845,8 @@ def spawn_worker(app, kind, command, env, ordinal=1):
         ('metrics-dir',         metrics_path),
         ('uid',                 getpwuid(getuid()).pw_name),
         ('gid',                 getgrgid(getgid()).gr_name),
+        ('logfile-chown',       '%s:%s' % (getpwuid(getuid()).pw_name, getgrgid(getgid()).gr_name))
+        ('logfile-chmod',       640)
     ]
 
     http = '{BIND_ADDRESS:s}:{PORT:s}'.format(**env)
@@ -1035,22 +972,6 @@ def delete_app_metrics(app):
     if not exists(metrics_dir):
         makedirs(metrics_dir)
 
-
-# === CLI commands ===
-
-@click.group()
-def cli():
-    """ 
----------------------------------------------
-
-:+:Polybox:+:
-
-https://github.com/mardix/polybox/ 
-
----------------------------------------------
-    """
-    pass
-
 def _delete_app(app, delete_app=True, remove_certs=True):
     # on destroy
     run_app_scripts(app, "destroy")
@@ -1090,6 +1011,23 @@ def _delete_app(app, delete_app=True, remove_certs=True):
 
 
 
+# === CLI commands ===
+
+@click.group()
+def cli():
+    """ 
+---------------------------------------------
+
+:+:Polybox:+:
+
+https://github.com/mardix/polybox/ 
+
+---------------------------------------------
+    """
+    pass
+
+
+
 # --- User commands ---
 
 @cli.command("apps")
@@ -1124,9 +1062,6 @@ def list_apps():
                 workers_len = workers_len - 1
             print("Workers: ", workers_len)
             print()
-            #data.append([app, domain_name, runtime, status, web_len, port, ssl, workers_len, avg, rss, vsz, tx])
-    #print_table(data)
-
 
 @cli.command("deploy")
 @click.argument('app')
@@ -1159,7 +1094,6 @@ def cmd_destroy(app):
 
     check_app(app)
     app = sanitize_app_name(app)
-
     if not click.confirm("Do you want to destroy this app? It will delete everything"):
         exit(1)
     if not click.confirm("Are you really sure?"):
@@ -1178,35 +1112,36 @@ def cmd_logs(app):
     logfiles = glob(join(LOG_ROOT, app, '*.log'))
     if len(logfiles):
         for line in multi_tail(app, logfiles):
-            echo(line.strip(), fg='white')
+            print(line.strip())
     else:
-        echo("No logs found for app '{}'.".format(app), fg='yellow')
+        print("No logs found for app '{}'.".format(app))
 
 
 @cli.command("info")
 @click.argument('app')
-def cmd_ps(app):
+def cmd_info(app):
     """Show app info: [<app>]"""
 
     check_app(app)
     app = sanitize_app_name(app)
     env = read_settings(app, 'SCALING')
     if env:
-        print(":: Process")
-        data = [[k, v] for k, v in env.items()]
-        data.insert(0, ["Process", "Size"])
-        print_table(data)  
+        print()
+        print("-" * 25)        
+        print(":: Processes workers")
+        for k, v in env.items():
+            print("- %s: %s" % (k, v)) 
         
     env_file = join(SETTINGS_ROOT, app, 'ENV')
     if exists(env_file):
         print()
         print("-" * 25)    
-        echo(":: Envs")
-        echo("")   
-        echo(open(env_file).read().strip(), fg='white') 
+        print(":: Envs")
+        print("")   
+        print(open(env_file).read().strip()) 
         print("")             
     else:
-        echo("Error: no workers found for app '%s'." % app, fg='red')
+        print("Error: no workers found for app '%s'." % app)
     print("-" * 80)
 
 @cli.command("scale")
