@@ -1066,14 +1066,6 @@ def list_apps():
             workers = get_app_processes(app)
             settings = read_settings(app, 'ENV')
 
-
-            metrics = get_app_metrics(app)
-            avg = metrics.get("avg", "-")
-            rss = metrics.get("rss", "-")
-            vsz = metrics.get("vsz", "-")
-            tx = metrics.get("tx", "-")
-            
-
             nginx_file = join(NGINX_ROOT, "%s.conf" % app)
             running = False
             port = settings.get("PORT", "-")
@@ -1093,11 +1085,6 @@ def list_apps():
                 print("Port: ", port)
                 workers_len = workers_len - 1
             print("Workers: ", workers_len)
-            print("Metrics:")
-            print("\t AVG: ", avg)
-            print("\t RSS: ", rss)
-            print("\t VSZ: ", vsz)
-            print("\t TX: ", tx)
             print()
 
 @cli.command("deploy")
@@ -1161,14 +1148,26 @@ def cmd_info(app):
 
     check_app(app)
     app = sanitize_app_name(app)
+    metrics = get_app_metrics(app)
+    avg = metrics.get("avg", "-")
+    rss = metrics.get("rss", "-")
+    vsz = metrics.get("vsz", "-")
+    tx = metrics.get("tx", "-")    
+    
     env = read_settings(app, 'SCALING')
     if env:
         print()
         print("-" * 25)        
         print(":: Processes workers")
         for k, v in env.items():
-            print("- %s: %s" % (k, v)) 
-        
+            print("  %s: %s" % (k, v)) 
+            
+    print(":: Metrics")
+    print("  AVG: ", avg)
+    print("  RSS: ", rss)
+    print("  VSZ: ", vsz)
+    print("  TX: ", tx)
+            
     env_file = join(SETTINGS_ROOT, app, 'ENV')
     if exists(env_file):
         print()
