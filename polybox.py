@@ -1142,7 +1142,18 @@ def cmd_deploy(app):
     _delete_app(app, delete_app=False, remove_certs=False)
     deploy_app(app)
 
-
+@cli.command("reload")
+@click.argument('app')
+def cmd_reload(app):
+    """Reload app: [<app>]"""
+    echo("Reloading app", fg="green")
+    check_app(app)
+    app = sanitize_app_name(app)
+    remove_nginx_conf(app)
+    cleanup_uwsgi_enabled_ini(app)
+    echo("......-> reloading '{}'...".format(app), fg='yellow')
+    spawn_app(app)
+    
 @cli.command("destroy")
 @click.argument('app')
 def cmd_destroy(app):
@@ -1230,17 +1241,7 @@ def cmd_ps_scale(app, settings):
     deploy_app(app, deltas)
 
 
-@cli.command("reload")
-@click.argument('app')
-def cmd_reload(app):
-    """Reload app: [<app>]"""
-    echo("Reloading app", fg="green")
-    check_app(app)
-    app = sanitize_app_name(app)
-    remove_nginx_conf(app)
-    cleanup_uwsgi_enabled_ini(app)
-    echo("......-> reloading '{}'...".format(app), fg='yellow')
-    spawn_app(app)
+
 
 @cli.command("reissue-ssl")
 @click.argument('app')
@@ -1260,7 +1261,7 @@ def cmd_reload(app):
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
 
-@cli.command("reload-all")
+@cli.command("apps:reload-all")
 def cmd_reload_all():
     """Reload all apps"""
     echo("Reloading all apps", fg="green")
@@ -1283,7 +1284,7 @@ def cmd_stop(app):
     cleanup_uwsgi_enabled_ini(app)
     echo("......-> '%s' stopped" % app, fg='yellow')
 
-@cli.command("stop-all")
+@cli.command("apps:stop-all")
 def cmd_stop_all():
     """Stop all apps"""
     echo("Stopping all apps", fg="green")
@@ -1339,28 +1340,6 @@ def cmd_update(branch="master"):
     chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
     echo("...update completed!", fg="green")
 
-#@cli.command("get-app-cert")
-@click.argument('app')
-def cmd_ssl_download(app):
-    """Downloading SSL CERT & KEY"""
-    print_title("Download SSL Key & Cert")
-    echo("Copy and paste ", fg="green")
-    check_app(app)
-    app = sanitize_app_name(app)
-    key = join(NGINX_ROOT, "%s.%s" % (app, 'key'))
-    crt = join(NGINX_ROOT, "%s.%s" % (app, 'crt')) 
-    echo("") 
-    echo("SSL CRT:")  
-    call('cat %s' % crt, shell=True)
-    echo("-" * 80)
-    echo("SSL KEY:")
-    call('cat %s' % key, shell=True)
-    echo("") 
-
-
-# ssl:upload-key
-# ssl:upload-crt
-def cmd_x(): pass
 
 # --- Internal commands ---
 
