@@ -1069,7 +1069,7 @@ def _delete_app(app, delete_app=True, remove_certs=True):
             unlink(acme_link)
 
 
-def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_envs=False):
+def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metrics=True, show_envs=True):
     runtime = get_app_runtime(app)
     workers = parse_app_processes(app)
     settings = read_settings(app, 'ENV')
@@ -1080,52 +1080,55 @@ def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_
     domain_name = settings.get('SERVER_NAME', '-')
     workers_len = len(workers.keys()) if workers else 0 
     running = True if (("static" and exists(nginx_file)) or app in enabled_files) else app in enabled_files
-    status = "running" if running else "-"
+    status = "running" if running else "not running"
     
-    print("*" * 40)
-    print("-" * 40)
-    print("Name: ", app)
-    print("Runtime: ", runtime)
-    print("Status: ", status)
-    if "web" in workers:
-        workers_len = workers_len - 1 # not counting the web as a worker
-        print("Web: Yes")
-        print("Server Name: ", domain_name)
-        print("Port: ", port)
-    print("Workers: ", workers_len)
+    if minimal:
+        print("- %s : %s " % (app, status))
+    else:
+        print("*" * 40)
+        print("-" * 40)
+        print("Name: ", app)        
+        print("Runtime: ", runtime)
+        print("Status: ", status)
+        if "web" in workers:
+            workers_len = workers_len - 1 # not counting the web as a worker
+            print("Web: Yes")
+            print("Server Name: ", domain_name)
+            print("Port: ", port)
+        print("Workers: ", workers_len)
         
-    if show_metrics:
-        metrics = get_app_metrics(app)
-        avg = metrics.get("avg", "-")
-        rss = metrics.get("rss", "-")
-        vsz = metrics.get("vsz", "-")
-        tx = metrics.get("tx", "-") 
-        print()     
-        print(":: Metrics")
-        print("  AVG: ", avg)
-        print("  RSS: ", rss)
-        print("  VSZ: ", vsz)
-        print("  TX: ", tx)
-    
-    if show_workers:
-        env = read_settings(app, 'SCALING')
-        if env:
-            print()      
-            print(":: Processes workers")
-            for k, v in env.items():
-                print("  %s: %s" % (k, v)) 
-      
-    if show_envs:  
-        env_file = join(SETTINGS_ROOT, app, 'ENV')
-        if exists(env_file):
-            print()   
-            print(":: Envs")
-            print("")   
-            print(open(env_file).read().strip()) 
-            print("")             
-        else:
-            print("Error: no workers found for app '%s'." % app)
-    print()
+        if show_metrics:
+            metrics = get_app_metrics(app)
+            avg = metrics.get("avg", "-")
+            rss = metrics.get("rss", "-")
+            vsz = metrics.get("vsz", "-")
+            tx = metrics.get("tx", "-") 
+            print()     
+            print(":: Metrics")
+            print("  AVG: ", avg)
+            print("  RSS: ", rss)
+            print("  VSZ: ", vsz)
+            print("  TX: ", tx)
+        
+        if show_workers:
+            env = read_settings(app, 'SCALING')
+            if env:
+                print()      
+                print(":: Processes workers")
+                for k, v in env.items():
+                    print("  %s: %s" % (k, v)) 
+        
+        if show_envs:  
+            env_file = join(SETTINGS_ROOT, app, 'ENV')
+            if exists(env_file):
+                print()   
+                print(":: Envs")
+                print("")   
+                print(open(env_file).read().strip()) 
+                print("")             
+            else:
+                print("Error: no workers found for app '%s'." % app)
+        print()
     
 
 # === CLI commands ===
@@ -1146,13 +1149,15 @@ https://github.com/mardix/polybox/
 # --- User commands ---
 
 @cli.command("apps")
-def list_apps():
+@click.argument('expanded', required=False)
+def cmd_apps(expanded=None):
     """List all apps"""
     print_title("All apps")
     enabled_files= {a.split("___")[0] for a in listdir(UWSGI_ENABLED) if "___" in a}
     for app in listdir(APP_ROOT):
         if not app.startswith((".", "_")):
-            _show_info(app, enabled_files=enabled_files)
+            minimal = not expanded
+            _show_info(app, enabled_files=enabled_files, minimal=minimal)
 
 
 @cli.command("deploy")

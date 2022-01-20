@@ -126,9 +126,14 @@ ssh polybox@$host
 
 ##### List all apps: `apps`
 
-
 ```
 ssh polybox@$host apps
+```
+
+The command above will show the minimal info. To expand:
+
+```
+ssh polybox@$host apps x
 ```
 
 ##### Deploy app: `deploy $app_name`
