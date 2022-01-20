@@ -232,7 +232,7 @@ def sanitize_app_name(app):
     """Sanitize the app name and build matching path"""
     return "".join(c for c in app if c.isalnum() or c in ('.', '_', '-')).rstrip().lstrip('/')
 
-def fatal_error(msg):
+def _error(msg):
     echo(msg, fg="red")
     exit(1)
 
@@ -241,7 +241,7 @@ def check_app(app):
     """Utility function for error checking upon command startup."""
     app = sanitize_app_name(app)
     if not exists(join(APP_ROOT, app)):
-        fatal_error("ERROR: app '%s' not found." % app)
+        _error("ERROR: app '%s' not found." % app)
 
 
 def get_free_port(address=""):
@@ -297,7 +297,6 @@ def write_settings(app, section, data):
     [env.set(section, k.upper(), str(v)) for k,v in data.items()]
     env.write(open(env_file, "w"))
 
-
 def expandvars(buffer, env, default=None, skip_escaped=False):
     """expand shell-style environment variables in a buffer"""
 
@@ -307,7 +306,6 @@ def expandvars(buffer, env, default=None, skip_escaped=False):
     pattern = (r'(?<!\\)' if skip_escaped else '') + r'\$(\w+|\{([^}]*)\})'
     return sub(pattern, replace_var, buffer)
 
-
 def command_output(cmd):
     """executes a command and grabs its output, if any"""
     try:
@@ -315,7 +313,6 @@ def command_output(cmd):
         return str(check_output(cmd, stderr=STDOUT, env=env, shell=True))
     except:
         return ""
-
 
 def parse_settings(filename, env={}):
     """Parses a settings file and returns a dict with environment variables"""
@@ -342,23 +339,81 @@ def get_config(app):
         for c in config:
             if app == c["name"]:
                 return c
-        fatal_error("App '%s' is missing or didn't match any app 'name' in polybox.yml." % app)
+        _error("App '%s' is missing or didn't match any app 'name' in polybox.yml." % app)
 
 def get_app_processes(app):
     """ Returns the applications to run """
     return {k.lower(): v  for k,v in get_config(app).get('process', {}).items()}
 
+def parse_app_processes(app):
+    approc = get_app_processes(app)
+    proc = {}
+    for k, v in approc.items():
+        if isinstance(v, dict):
+            if "cmd" not in v:
+                _error("Missing cmd in ")
+            else:
+                if "workers" not in v:
+                    v["workers"] = 1
+            proc[k] = v
+        else:
+            proc[k] = {
+                "cmd": v,
+                "workers": 1
+            }
+    if "web" in proc:
+        sn = proc["web"].get("server_name")
+        if sn:
+            proc["web"]["server_name"] = sn if isinstance(sn, list) else [sn]
+        else:
+            cdata = sanitize_config_data(get_config(app))
+            if "SERVER_NAME" in cdata:
+                sn = cdata.get("SERVER_NAME") or cdata.get("NGINX_SERVER_NAME")
+                if sn:
+                    proc["web"]["server_name"] = [sn]
+            else:
+                _error("missing 'process.web.server_name' in app: %s" % app)
+    return proc
+    
+
 def get_app_config(app):
     """ Turn config into ENV """
-    env = {}
+
     config = get_config(app)
 
     if "process" not in config:
-        fatal_error("missing 'process' for app: %s" % app)
+        _error("missing 'process' for app: %s" % app)
 
-    if "web" in config["process"] and "server_name" not in config:
-        fatal_error("missing 'server_name' in app: %s" % app)
+    if "web" in config["process"]:
+        if isinstance(config["process"]["web"], dict) and not config["process"]["web"].get("server_name"):
+                _error("missing 'process.web.server_name' in app: %s" % app)
+        else:
+            if "server_name" not in config:
+                _error("missing 'server_name' in app: %s" % app)
 
+    cdata = sanitize_config_data(config)
+    processes = parse_app_processes(app)
+    
+    # Remap keys
+    mapper = {
+        "SERVER_NAME": "NGINX_SERVER_NAME",
+        "STATIC_PATHS": "NGINX_STATIC_PATHS",
+        "HTTPS_ONLY": "NGINX_HTTPS_ONLY",
+        "THREADS": "UWSGI_THREADS",
+        "GEVENT": "UWSGI_GEVENT",
+        "ASYNCIO": "UWSGI_ASYNCIO"
+    }
+    for k, v in mapper.items():
+        if k in cdata and v not in cdata:
+            cdata[v] = cdata[k]
+    if "web" in processes:
+        sn = processes["web"]["server_name"][0]
+        cdata["SERVER_NAME"] = sn
+        cdata["NGINX_SERVER_NAME"] = sn
+    return cdata
+
+def sanitize_config_data(config):
+    env = {}
     # keys to remove from the config
     for k in ["env", "scripts", "process"]:
         if k in config:
@@ -368,26 +423,11 @@ def get_app_config(app):
         if isinstance(v, dict):
             env.update({("%s_%s" % (k, vk)).upper(): vv for vk, vv in v.items()})
         else:
-            env[k.upper()] = v
-
-    # Remap keys
-    mapper = {
-        "SERVER_NAME": "NGINX_SERVER_NAME",
-        "DOMAIN_NAME": "NGINX_SERVER_NAME",
-        "STATIC_PATHS": "NGINX_STATIC_PATHS",
-        "HTTPS_ONLY": "NGINX_HTTPS_ONLY",
-        "THREADS": "UWSGI_THREADS",
-        "GEVENT": "UWSGI_GEVENT",
-        "ASYNCIO": "UWSGI_ASYNCIO"
-    }
-    for k, v in mapper.items():
-        if k in env and v not in env:
-            env[v] = env[k]
+            env[k.upper()] = v   
     return env
 
 def get_app_env(app):
     return get_config(app).get("env", {})
-
 
 def human_size(fsize, units=[' bytes','KB','MB','GB','TB', 'PB', 'EB']): 
     return "{:.2f}{}".format(float(fsize), units[0]) if fsize < 1024 else human_size(fsize / 1024, units[1:])
@@ -472,13 +512,13 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         call('git submodule update', cwd=app_path, env=env, shell=True)
 
         config = get_config(app)
-        workers = get_app_processes(app)
+        workers = parse_app_processes(app)
     
         if not config:
-            fatal_error("Invalid polybox.yml for app '%s'." % app)
+            _error("Invalid polybox.yml for app '%s'." % app)
 
         elif not workers:
-            fatal_error("ERROR: polybox.yml seems to be invalid. Can't find processes")
+            _error("Invalid polybox.yml - missing 'processes'")
         else:
             # ensure path exist
             for p in ensure_paths:
@@ -497,27 +537,30 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
                 if "web" in workers:
                     # domain name
                     if "NGINX_SERVER_NAME" not in env2:
-                        fatal_error("missing 'server_name' when there is a 'web' process")
+                        _error("missing 'server_name' when there is a 'web' process")
 
                     if runtime == "static":
-                        if not workers["web"].startswith("/"):
-                            fatal_error("for static site the webroot must start with a '/' (slash), instead '%s' provided" % workers["web"])
+                        if not workers["web"]["cmd"].startswith("/"):
+                            _error("for static site the webroot must start with a '/' (slash), instead '%s' provided" % workers["web"]["cmd"])
                   
                 # Setup runtime
                 # python
                 if runtime == "python":
                     setup_python_runtime(app, deltas)
+                    
                 # node
                 elif runtime == "node":
                     setup_node_runtime(app, deltas)
+                    
                 # static html/php, shell
                 elif runtime in ["static", "shell"]:
                     setup_shell_runtime(app, deltas)
 
-                # Run release script. Once on git push
+                # Scripts ==
+                
+                # Once on git push
                 if release is True:
                     run_app_scripts(app, "release")
-
                 run_app_scripts(app, "predeploy")
                 spawn_app(app, deltas)
                 run_app_scripts(app, "postdeploy")
@@ -615,12 +658,10 @@ def spawn_app(app, deltas={}):
 
     app_path = join(APP_ROOT, app)
     runtime = get_app_runtime(app)
-    workers = get_app_processes(app)
-    ordinals = defaultdict(lambda: 1)
-    worker_count = {k: 1 for k in workers.keys()}
+    workers = parse_app_processes(app)
+    worker_count = {k: v["workers"] for k,v in workers.items()}
     virtualenv_path = join(ENV_ROOT, app)
     scaling = read_settings(app, 'SCALING')
-    error_detected = False
     
     # Bootstrap environment
     env = {
@@ -730,7 +771,7 @@ def spawn_app(app, deltas={}):
 
             # static requires just the path. It will set the url as web root
             if runtime == 'static':
-                static_path = workers['web'].strip("/").rstrip("/")
+                static_path = workers['web']["cmd"].strip("/").rstrip("/")
                 html_root = join(app_path, static_path)
                 env['INTERNAL_NGINX_STATIC_CLAUSES'] = expandvars(INTERNAL_NGINX_STATIC_CLAUSES, locals())
 
@@ -857,23 +898,23 @@ def spawn_worker(app, kind, command, env, ordinal=1):
         makedirs(metrics_path)
 
     settings = [
-        ('chdir',               join(APP_ROOT, app)),
-        ('master',              'true'),
-        ('project',             app),
-        ('max-requests',        env.get('UWSGI_MAX_REQUESTS', '1024')),
-        ('listen',              env.get('UWSGI_LISTEN', '16')),
-        ('processes',           env.get('UWSGI_PROCESSES', '1')),
-        ('procname-prefix',     '{app:s}:{kind:s}'.format(**locals())),
-        ('enable-threads',      env.get('UWSGI_ENABLE_THREADS', 'true').lower()),
-        ('log-x-forwarded-for', env.get('UWSGI_LOG_X_FORWARDED_FOR', 'false').lower()),
-        ('log-maxsize',         env.get('UWSGI_LOG_MAXSIZE', UWSGI_LOG_MAXSIZE)),
-        ('logto2',               '{log_file:s}.{ordinal:d}.log'.format(**locals())),
-        ('log-backupname',      '{log_file:s}.{ordinal:d}.log.old'.format(**locals())),
-        ('metrics-dir',         metrics_path),
-        ('uid',                 getpwuid(getuid()).pw_name),
-        ('gid',                 getgrgid(getgid()).gr_name),
-        ('logfile-chown',       '%s:%s' % (getpwuid(getuid()).pw_name, getgrgid(getgid()).gr_name)),
-        ('logfile-chmod',       '640')
+        ('chdir',join(APP_ROOT, app)),
+        ('master','true'),
+        ('project',app),
+        ('max-requests',env.get('UWSGI_MAX_REQUESTS', '1024')),
+        ('listen',env.get('UWSGI_LISTEN', '16')),
+        ('processes',env.get('UWSGI_PROCESSES', '1')),
+        ('procname-prefix','{app:s}:{kind:s}'.format(**locals())),
+        ('enable-threads',env.get('UWSGI_ENABLE_THREADS', 'true').lower()),
+        ('log-x-forwarded-for',env.get('UWSGI_LOG_X_FORWARDED_FOR', 'false').lower()),
+        ('log-maxsize',env.get('UWSGI_LOG_MAXSIZE', UWSGI_LOG_MAXSIZE)),
+        ('logto2','{log_file:s}.{ordinal:d}.log'.format(**locals())),
+        ('log-backupname','{log_file:s}.{ordinal:d}.log.old'.format(**locals())),
+        ('metrics-dir',metrics_path),
+        ('uid',getpwuid(getuid()).pw_name),
+        ('gid',getgrgid(getgid()).gr_name),
+        ('logfile-chown','%s:%s' % (getpwuid(getuid()).pw_name, getgrgid(getgid()).gr_name)),
+        ('logfile-chmod','640')
     ]
 
     http = '{BIND_ADDRESS:s}:{PORT:s}'.format(**env)
@@ -1053,7 +1094,7 @@ https://github.com/mardix/polybox/
 
 def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_envs=False):
     runtime = get_app_runtime(app)
-    workers = get_app_processes(app)
+    workers = parse_app_processes(app)
     settings = read_settings(app, 'ENV')
 
     nginx_file = join(NGINX_ROOT, "%s.conf" % app)
@@ -1070,10 +1111,10 @@ def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_
     print("Runtime: ", runtime)
     print("Status: ", status)
     if "web" in workers:
+        workers_len = workers_len - 1 # not counting the web as a worker
         print("Web: Yes")
         print("Server Name: ", domain_name)
         print("Port: ", port)
-        workers_len = workers_len - 1
     print("Workers: ", workers_len)
         
     if show_metrics:

@@ -459,7 +459,10 @@ apps:
 - 1.1.0
   - renamed command: 'app' -> 'apps'
   - allow to x:update from a branch
-  - WIP:remove envrionment settings. Can now be added in the yml file
+  - fixed bug: log issues due to permission
+  - remove environment settings. Can now be added in the yml file
+  - ability to add workers per process 
+  - wip: cron
 
 - 1.0.1
   - fixed letsencrypt issue
