@@ -41,7 +41,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.0-b.02" 
+VERSION = "1.1.0-b.03" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -859,7 +859,7 @@ def spawn_app(app, deltas={}):
             if not exists(enabled):
                 echo("......-> spawning '{app:s}:{k:s}.{w:d}'".format(**locals()), fg='green')
                 _cmd = workers[k]["cmd"]
-                spawn_worker(app, k, _cmd, env, w)
+                spawn_worker(app, k, _cmd, env)
 
     # Remove unnecessary workers (leave logfiles)
     for k, v in to_destroy.items():
@@ -872,7 +872,7 @@ def spawn_app(app, deltas={}):
     return env
 
 
-def spawn_worker(app, kind, command, env, ordinal=1):
+def spawn_worker(app, kind, command, env):
     """Set up and deploy a single worker of a given kind"""
 
     app_kind = kind
@@ -891,7 +891,6 @@ def spawn_worker(app, kind, command, env, ordinal=1):
     metrics_path = join(METRICS_ROOT, app)
     available = join(UWSGI_AVAILABLE, '{app:s}___{kind:s}.{ordinal:d}.ini'.format(**locals()))
     enabled = join(UWSGI_ENABLED, '{app:s}___{kind:s}.{ordinal:d}.ini'.format(**locals()))
-    log_file = join(LOG_ROOT, app, kind)
 
     # Create metrics dir
     if not exists(metrics_path):
@@ -981,7 +980,7 @@ def remove_nginx_conf(app):
         remove(nginx_conf)
 
 
-def multi_tail(app, filenames, catch_up=20):
+def multi_tail(filenames, catch_up=20):
     """Tails multiple log files"""
 
     # Seek helper
@@ -1033,12 +1032,6 @@ def multi_tail(app, filenames, catch_up=20):
                 else:
                     filenames.remove(f)
 
-def delete_app_metrics(app):
-    metrics_dir = join(METRICS_ROOT, app)
-    if exists(metrics_dir):
-        rmtree(metrics_dir)
-    if not exists(metrics_dir):
-        makedirs(metrics_dir)
 
 def _delete_app(app, delete_app=True, remove_certs=True):
     
@@ -1075,22 +1068,6 @@ def _delete_app(app, delete_app=True, remove_certs=True):
             rmtree(acme_certs)
             unlink(acme_link)
 
-
-
-# === CLI commands ===
-
-@click.group()
-def cli():
-    """ 
----------------------------------------------
-
-:+:Polybox:+:
-
-https://github.com/mardix/polybox/ 
-
----------------------------------------------
-    """
-    pass
 
 def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_envs=False):
     runtime = get_app_runtime(app)
@@ -1150,6 +1127,22 @@ def _show_info(app, enabled_files, show_workers=False, show_metrics=False, show_
             print("Error: no workers found for app '%s'." % app)
     print()
     
+
+# === CLI commands ===
+
+@click.group()
+def cli():
+    """
+---------------------------------------------
+
+:+:Polybox:+:
+
+https://github.com/mardix/polybox/ 
+
+---------------------------------------------
+    """
+    pass
+
 # --- User commands ---
 
 @cli.command("apps")
@@ -1184,10 +1177,10 @@ def cmd_reload(app):
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
     
-@cli.command("destroy")
+@cli.command("remove")
 @click.argument('app')
 def cmd_destroy(app):
-    """Destroy app: [<app>]"""
+    """To remove app: [<app>]"""
     echo("**** WARNING ****", fg="red")
     echo("**** YOU ARE ABOUT TO DESTROY AN APP ****", fg="red")
 
@@ -1254,7 +1247,7 @@ def cmd_ps_scale(app, settings):
             return
     deploy_app(app, deltas)
 
-@cli.command("ssl:reset")
+@cli.command("set-ssl")
 @click.argument('app')
 def cmd_reload(app):
     """To reissue ssl to an app: [<app>]"""
@@ -1272,7 +1265,7 @@ def cmd_reload(app):
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
 
-@cli.command("reload:all")
+@cli.command("apps:reload-all")
 def cmd_reload_all():
     """Reload all apps"""
     echo("Reloading all apps", fg="green")
@@ -1295,7 +1288,7 @@ def cmd_stop(app):
     cleanup_uwsgi_enabled_ini(app)
     echo("......-> '%s' stopped" % app, fg='yellow')
 
-@cli.command("stop:all")
+@cli.command("apps:stop-all")
 def cmd_stop_all():
     """Stop all apps"""
     echo("Stopping all apps", fg="green")
@@ -1307,39 +1300,13 @@ def cmd_stop_all():
             echo("......-> '%s' stopped" % app, fg='yellow')
 
 
-@cli.command("set-ssh")
-@click.argument('public_key_file')
-def cmd_setup_ssh(public_key_file):
-    """Set up a new SSH key (use - for stdin)"""
-
-    def add_helper(key_file):
-        if exists(key_file):
-            try:
-                fingerprint = str(check_output('ssh-keygen -lf ' + key_file, shell=True)).split(' ', 4)[1]
-                key = open(key_file, 'r').read().strip()
-                echo("Adding key '{}'.".format(fingerprint), fg='white')
-                setup_authorized_keys(fingerprint, BOX_SCRIPT, key)
-            except Exception:
-                echo("Error: invalid public key file '{}': {}".format(key_file, format_exc()), fg='red')
-        elif '-' == public_key_file:
-            buffer = "".join(stdin.readlines())
-            with NamedTemporaryFile(mode="w") as f:
-                f.write(buffer)
-                f.flush()
-                add_helper(f.name)
-        else:
-            echo("Error: public key file '{}' not found.".format(key_file), fg='red')
-
-    add_helper(public_key_file)
-
-
-@cli.command("x:version")
+@cli.command("system:version")
 def cmd_version():
     """ Get Version """
     echo("%s v.%s" % (NAME, VERSION), fg="green")
 
 
-@cli.command("x:update")
+@cli.command("system:update")
 @click.argument('branch',required=False)
 def cmd_update(branch="master"):
     """ Update Polybox to the latest from Github. x:update $branch """
