@@ -1157,7 +1157,7 @@ def cmd_apps(expanded=None):
     for app in listdir(APP_ROOT):
         if not app.startswith((".", "_")):
             minimal = not expanded
-            _show_info(app, enabled_files=enabled_files, minimal=minimal)
+            _show_info(app, enabled_files=enabled_files, minimal=minimal, show_envs=False)
 
 
 @cli.command("deploy")
