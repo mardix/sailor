@@ -351,10 +351,9 @@ def parse_app_processes(app):
     for k, v in approc.items():
         if isinstance(v, dict):
             if "cmd" not in v:
-                _error("Missing cmd in ")
-            else:
-                if "workers" not in v:
-                    v["workers"] = 1
+                _error("Missing 'cmd' in %s:%s" % (app, k))
+            if "workers" not in v:
+                v["workers"] = 1
             proc[k] = v
         else:
             proc[k] = {
@@ -371,7 +370,7 @@ def parse_app_processes(app):
                 sn = cdata.get("SERVER_NAME") or cdata.get("NGINX_SERVER_NAME")
                 if sn:
                     proc["web"]["server_name"] = [sn]
-            else:
+            if not proc["web"].get("server_name"):
                 _error("missing 'process.web.server_name' in app: %s" % app)
     return proc
     
@@ -540,8 +539,9 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
                         _error("missing 'server_name' when there is a 'web' process")
 
                     if runtime == "static":
-                        if not workers["web"]["cmd"].startswith("/"):
-                            _error("for static site the webroot must start with a '/' (slash), instead '%s' provided" % workers["web"]["cmd"])
+                        _cmd = workers["web"].get("cmd")
+                        if not _cmd or not _cmd.startswith("/"):
+                            _error("for static site the webroot must start with a '/' (slash), instead '%s' provided" % _cmd)
                   
                 # Setup runtime
                 # python
@@ -858,7 +858,8 @@ def spawn_app(app, deltas={}):
             enabled = join(UWSGI_ENABLED, '{app:s}___{k:s}.{w:d}.ini'.format(**locals()))
             if not exists(enabled):
                 echo("......-> spawning '{app:s}:{k:s}.{w:d}'".format(**locals()), fg='green')
-                spawn_worker(app, k, workers[k], env, w)
+                _cmd = workers[k]["cmd"]
+                spawn_worker(app, k, _cmd, env, w)
 
     # Remove unnecessary workers (leave logfiles)
     for k, v in to_destroy.items():
@@ -876,7 +877,6 @@ def spawn_worker(app, kind, command, env, ordinal=1):
 
     app_kind = kind
     runtime = get_app_runtime(app)
-    workers = get_app_processes(app)
     config = get_app_config(app)
 
     if app_kind == "web":
