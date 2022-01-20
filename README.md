@@ -411,15 +411,29 @@ apps:
 
 ---
 
+TODO
+- Allow multiple server name on same app with their own ssl
 
 ## CHANGELOG
 
 - 1.1.0
   - renamed command: 'app' -> 'apps'
-  - allow to x:update from a branch
   - fixed bug: log issues due to permission
-  - remove environment settings. Can now be added in the yml file
-  - ability to add workers per process 
+  - remove environment settings from command. Can now be added in the yml file
+  - expand process list to allow process to have extended properties as dict/hash:
+  ```
+  process:
+    web:
+      cmd:
+      server_name:
+      workers:
+      
+    others:
+      cmd:
+      workers:
+  ```
+  - `server_name` can now be added in `process.web` 
+  - allow to system:update to be able to update from a different branch `system:update 1.2.0`
   - wip: cron
 
 - 1.0.1
