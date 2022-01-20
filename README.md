@@ -112,6 +112,8 @@ We did it, *Okurrr!*
 
 Polybox communicates with your server via SSH, with the user name: **`polybox`**
 
+You must already already have SSH access to the machine for it to work.
+
 ie: `ssh polybox@$host`
 
 
@@ -156,13 +158,6 @@ To completely remove the application
 ssh polybox@$host remove $app_name
 ```
 
-##### Reset SSL: `reset-ssl $app_name`
-
-To re-issue the SSL
-
-```
-ssh polybox@$host reset-ssl $app_name
-```
 
 ##### Show app info: `info $app_name`
 
@@ -174,6 +169,15 @@ ssh polybox@$host info $app_name
 
 ```
 ssh polybox@$host log $app_name
+```
+
+
+##### Reset SSL: `reset-ssl $app_name`
+
+To re-issue the SSL
+
+```
+ssh polybox@$host reset-ssl $app_name
 ```
 
 
@@ -205,7 +209,7 @@ ssh polybox@$host apps:reload-all
 ssh polybox@$host apps:stop-all
 ```
 
-### -- Misc --
+#### -- Misc --
 
 
 ##### Show the version: `system:version`
@@ -222,6 +226,11 @@ To update Polybox to the latest from Github
 ssh polybox@$host system:update
 ```
 
+Additionally, you can update from a specific branch, usually for testing purposes
+
+```
+ssh polybox@$host system:update $branch-name
+```
 
 ---
 
