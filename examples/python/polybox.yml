@@ -6,7 +6,6 @@ version:
 apps:
   - name: yourdomain.com
     runtime: python
-    auto_restart: true
     env:
       ENV_KEY: ENV_VAL
       ENV_KEY2: ENV_VAL2

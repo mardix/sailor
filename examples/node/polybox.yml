@@ -5,9 +5,10 @@ description:
 version:
 apps:
   - name: yourdomain.com
-    server_name: yourdomain.com
     runtime: node
     auto_restart: true
     process:
-      web: node app.js 2>&1 | cat
+      web: 
+        cmd: node app.js 2>&1 | cat
+        server_name: yourdomain.com
 

@@ -1165,18 +1165,32 @@ def cmd_deploy(app):
     _delete_app(app, delete_app=False, remove_certs=False)
     deploy_app(app)
 
-@cli.command("reload")
-@click.argument('app')
-def cmd_reload(app):
-    """Reload app: [<app>]"""
-    echo("Reloading app", fg="green")
+def _reload_app(app):
     check_app(app)
     app = sanitize_app_name(app)
     remove_nginx_conf(app)
     cleanup_uwsgi_enabled_ini(app)
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
+
+
+@cli.command("reload")
+@click.argument('app')
+def cmd_reload(app):
+    """Reload app: [<app>]"""
+    print("= Reloading app")
+    _reload_app(app)
+
+
+@cli.command("apps:reload-all")
+def cmd_reload_all():
+    """Reload all apps"""
+    print("= Reload all")
+    for app in listdir(APP_ROOT):
+        if not app.startswith((".", "_")):
+            _reload_app(app)
     
+
 @cli.command("remove")
 @click.argument('app')
 def cmd_destroy(app):
@@ -1247,7 +1261,7 @@ def cmd_ps_scale(app, settings):
             return
     deploy_app(app, deltas)
 
-@cli.command("set-ssl")
+@cli.command("reset-ssl")
 @click.argument('app')
 def cmd_reload(app):
     """To reissue ssl to an app: [<app>]"""
@@ -1265,17 +1279,6 @@ def cmd_reload(app):
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
 
-@cli.command("apps:reload-all")
-def cmd_reload_all():
-    """Reload all apps"""
-    echo("Reloading all apps", fg="green")
-    for app in listdir(APP_ROOT):
-        if not app.startswith((".", "_")):
-            app = sanitize_app_name(app)
-            remove_nginx_conf(app)
-            cleanup_uwsgi_enabled_ini(app)
-            echo("...-> reloading '{}'...".format(app), fg='yellow')
-            spawn_app(app)
 
 @cli.command("stop")
 @click.argument('app')

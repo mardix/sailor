@@ -19,7 +19,7 @@
 - Runs workers/background applications
 - Easy configuration with polybox.yml
 - Easy command line setup
-- App management: `deploy, reload, stop, destroy, scale, logs` etc
+- App management: `deploy, reload, stop, remove, scale, log, info` etc
 - Run scripts during application lifecycle: `release, predeploy, postdeploy, destroy`
 - SSL/HTTPS with LetsEncrypt and ZeroSSL
 - Supports any Shell script, therefore any other languages are supported
@@ -27,7 +27,7 @@
 - Create static sites
 - Multi languages: Python, Nodejs, PHP, HTML/Static
 - Support Flask, Django, Express, etc...
-- Python >= 3.6
+- Python >= 3.8
 - Nginx
 - Logs
 
@@ -57,25 +57,25 @@ chmod 755 install.sh
 
 On your local machine, point a Git remote to your Polybox server (set in step 2), with **`polybox`** as username.
 
-Format: `git remote add polybox polybox@[HOST]:[APP_NAME]`
+Format: `git remote add polybox polybox@$host:$app_name`
 
 With:
 
-- `[HOST]` The server name or IP address 
-- `[APP_NAME]` The name of the application, that is set in the `polybox.yml` (the manifest to deploy)
+- `$host` The server name or IP address 
+- `$app_name` The name of the application, that is set in the `polybox.yml` (the manifest to deploy)
 
 Example: `git remote add polybox polybox@my-server-host.com:myappname.com`
 
 ---
 
-## + Getting work done!
+### + Getting work done!
 
-#### 1. Work on your app...
+##### 1. Work on your app...
 
 ...go into your repo and do what you do best, *okurrr!* :) 
 
 
-#### 2. Edit Polybox.yml
+##### 2. Edit Polybox.yml
 
 At the root of your app directory, create  `polybox.yml` (required).
 
@@ -84,196 +84,144 @@ At the root of your app directory, create  `polybox.yml` (required).
 
 ---
 apps:
-    # with remote: polybox@[host.com]:myapp.com
+    # ->  with remote: polybox@$host:myapp.com
   - name: myapp.com
-    server_name: myapp.com
     runtime: python
     process:
-      web: app:app
+      web: 
+        cmd: app:app
+        server_name: myapp.com
 
 ```
 
-#### 3. Add Git Remote
+##### 3. Add Git Remote
 
-Example: `git remote add polybox polybox@[host.com]:myapp.com`
+Example: `git remote add polybox polybox@$host:myapp.com`
 
-#### 4. Deploy
+##### 4. Deploy
 
 Push your code: ` git push polybox master`
 
-#### 5. Profit!
+##### 5. Profit!
 
 We did it, *Okurrr!*
 
 ---
 
-## + Polybox Commands
+### + Polybox Commands
 
 Polybox communicates with your server via SSH, with the user name: **`polybox`**
 
-ie: `ssh polybox@[host.com]`
+ie: `ssh polybox@$host`
 
-### General
 
-#### List all commands
-
-List all commands
+##### List all commands
 
 ```
-ssh polybox@[host.com]
-```
-
-### -- Apps --
-
-To manage apps
-
-#### apps
-
-List  all apps
-
-```
-ssh polybox@[host.com] apps
+ssh polybox@$host
 ```
 
 
-#### deploy
+##### List all apps: `apps`
 
-Deploy app. `[app_name]` is the app name
 
 ```
-ssh polybox@[host.com] deploy [app_name]
+ssh polybox@$host apps
 ```
 
-#### reload
+##### Deploy app: `deploy $app_name`
 
-Reload an app
 
 ```
-ssh polybox@[host.com] reload [app_name]
+ssh polybox@$host deploy $app_name
 ```
 
-#### stop
-
-Stop an app
+##### Reload app: `reload $app_name`
 
 ```
-ssh polybox@[host.com] stop [app_name]
+ssh polybox@$host reload $app_name
 ```
 
-#### destroy
-
-Delete an app
+##### Stop app: `stop $app_name`
 
 ```
-ssh polybox@[host.com] destroy [app_name]
+ssh polybox@$host stop $app_name
+```
+
+##### Remove app: `remove $app_name`
+
+To completely remove the application
+
+```
+ssh polybox@$host remove $app_name
+```
+
+##### Reset SSL: `reset-ssl $app_name`
+
+To re-issue the SSL
+
+```
+ssh polybox@$host reset-ssl $app_name
+```
+
+##### Show app info: `info $app_name`
+
+```
+ssh polybox@$host info $app_name
+```
+
+##### Show app log: `log $app_name`
+
+```
+ssh polybox@$host log $app_name
 ```
 
 
-#### reissue-ssl
 
-To reissue SSL
+##### Scale app's workers
 
-```
-ssh polybox@[host.com] reissue-ssl [app_name]
-```
-
-#### log
-
-To view application's log
+To increase/decrease the total workers for this process
 
 ```
-ssh polybox@[host.com] log [app_name]
-```
-
-## -- Scaling --
-
-To scale the application
-
-### ps
-
-Show the process count
-
-```
-ssh polybox@[host.com] ps [app_name]
-```
-
-### scale
-
-Scale processes
-
-```
-ssh polybox@[host.com] scale [app_name] $proc=$count $proc2=$count2
+ssh polybox@$host scale $app_name $proc=$count $proc2=$count2
 ```
 
 Example: 
 
 ```
-ssh polybox@[host.com] scale site.com web=4
+ssh polybox@$host scale site.com web=4
 ```
 
-## -- Environment --
+##### Reload all apps: `apps:reload-all`
 
-To edit application's environment variables 
-
-#### envs
-
-Show ENV configuration for app
 
 ```
-ssh polybox@[host.com] envs [app_name]
+ssh polybox@$host apps:reload-all
 ```
 
-#### setenv
-
-Set ENV config
+##### Stop all apps: `apps:stop-all`
 
 ```
-ssh polybox@[host.com] setenv [app_name] $KEY=$VAL $KEY2=$VAL2
+ssh polybox@$host apps:stop-all
 ```
 
-#### delenv
-
-Delete a key from the environment var
-
-```
-ssh polybox@[host.com] delenv [app_name] $KEY
-```
+### -- Misc --
 
 
-
-## -- Misc --
-
-#### reload-all
-
-Reload all apps on the server
+##### Show the version: `system:version`
 
 ```
-ssh polybox@[host.com] reload-all
+ssh polybox@$host system:version
 ```
 
-#### stop-all
-
-Stop all apps on the server
-
-```
-ssh polybox@[host.com] stop-all
-```
-
-### x-update
+##### Update the system `system:update`
 
 To update Polybox to the latest from Github
 
 ```
-ssh polybox@[host.com] x-update
+ssh polybox@$host system:update
 ```
 
-### x-version
-
-To get Polybox's version
-
-```
-ssh polybox@[host.com] x-version
-```
 
 ---
 
@@ -333,7 +281,6 @@ Polybox takes away all the complexity of Docker Containers or Dokku and gives yo
    * For Node, it installs whatever is in `package.json` into `node_modules`.
 * It then looks at `polybox.yml` and starts the relevant applications using a generic process manager.
 * You can optionally also specify a `release` worker which is run once when the app is deployed.
-* You can then remotely change application settings (`config:set`) or scale up/down worker processes (`ps:scale`).
 * A `static` worker type, with the root path as the argument, can be used to deploy a gh-pages style static site.
 
 ---
@@ -357,24 +304,12 @@ When setting up the remote, the `name` must match the `name` in the polybox.yml
 #
 ---
 
-# Name of the package (not used by Polybox)
-name: 
-
-# description of the package (not used by Polybox)
-description:
-
-# version if necessary (not used by Polybox)
-version:
-
 # *required: list/array of all applications to run 
 apps:
   - 
     # *required - the name of the application
     name: 
-
-    # the server name without http, will be used with process["web"]
-    server_name: 
-
+    
     # runtime: python|node|static|shell
     # python for wsgi application (default python)
     # node: for node application, where the command should be ie: 'node inde.js 2>&1 | cat'
@@ -387,12 +322,6 @@ apps:
 
     # static_paths (array): specify list of static path to expose, [/url:path, ...]
     static_paths: 
-
-    # https_only (bool): when true (default), it will redirect http to https
-    https_only: true
-
-    # ssl (bool) true(default): to enable / disable ssl. It will be true if https_only is True
-    ssl: true
     
     # SSL issuer: letsencrypt(default)|zerossl
     ssl_issuer: letsencrypt
@@ -437,17 +366,32 @@ apps:
     # all other process name will be regular worker. 
     # The name doesn't matter 
     process:
-
-      # web (string): it’s the only process type that can receive external HTTP traffic
-      #-> app:app (for python using wsgi)
-      #-> node server.js 2>&1 cat (For other web app which requires a server command)
-      #-> /web-root-dir-name (for static html+php)
+      # == web
+      # (dict/object): it’s the only process type that can receive external HTTP traffic
       web: 
+        # == cmd - the command to execute
+        #-> cmd: app:app (for python using wsgi)
+        #-> cmd: node server.js 2>&1 cat (For other web app which requires a server command)
+        #-> cmd: /web-root-dir-name (for static html+php)
+        cmd: 
+        # == server_name
+        # the server name without http
+        server_name: 
+        # === workers
+        # the number of workers to run, by default 1
+        workers: 1
 
-      # worker* (string): command to run, with a name. The name doesn't matter.
-      # it can be named anything
-      worker: 
-
+      # other processes (string): command to run, with a name. The name doesn't matter - It can be named anything
+      worker1: 
+        # == cmd - the command to execute
+        cmd:
+        # === workers
+        # the number of workers to run, by default 1
+        workers: 1
+      
+      # for simplicity you can pass the command in the name as is
+      # workerx: command
+      workerX: 
 ```
 
 
@@ -515,5 +459,5 @@ Author: Mardix
 
 License: MIT 
 
-Copyright 2021 to Forever
+Copyright 2021, 2022 to Forever
 

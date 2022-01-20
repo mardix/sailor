@@ -1,27 +1,16 @@
+
 # ~ Polybox ~
 # polybox.yml
 # Polybox Configuration (https://mardix.github.io/polybox)
 #
 ---
 
-# Name of the package (not used by Polybox)
-name: 
-
-# description of the package (not used by Polybox)
-description:
-
-# version if necessary (not used by Polybox)
-version:
-
 # *required: list/array of all applications to run 
 apps:
   - 
     # *required - the name of the application
     name: 
-
-    # the server name without http, will be used with process["web"]
-    server_name: 
-
+    
     # runtime: python|node|static|shell
     # python for wsgi application (default python)
     # node: for node application, where the command should be ie: 'node inde.js 2>&1 | cat'
@@ -34,16 +23,24 @@ apps:
 
     # static_paths (array): specify list of static path to expose, [/url:path, ...]
     static_paths: 
-
-    # HTTPS + SSL
-    # https_only (bool): when true (default), it will redirect http to https
-    https_only: true
-    
-    # ssl (bool) true(default): to enable / disable ssl. It will be true if https_only is True
-    ssl: true
     
     # SSL issuer: letsencrypt(default)|zerossl
     ssl_issuer: letsencrypt
+    
+    # threads (int): The total threads to use
+    threads: 4
+
+    # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
+    wsgi: true
+
+    # nginx (object): nginx specific config. can be omitted
+    nginx:
+      include_file: ''
+    
+    # uwsgi (object): uwsgi specific config. can be omitted
+    uwsgi:
+      gevent: false
+      asyncio: false
 
     # env (object) custom environment variable
     env: 
@@ -70,28 +67,29 @@ apps:
     # all other process name will be regular worker. 
     # The name doesn't matter 
     process:
-
-      # web (string): it’s the only process type that can receive external HTTP traffic
-      #-> app:app (for python using wsgi)
-      #-> node server.js 2>&1 cat (For other web app which requires a server command)
-      #-> /web-root-dir-name (for static html+php)
+      # == web
+      # (dict/object): it’s the only process type that can receive external HTTP traffic
       web: 
+        # == cmd - the command to execute
+        #-> cmd: app:app (for python using wsgi)
+        #-> cmd: node server.js 2>&1 cat (For other web app which requires a server command)
+        #-> cmd: /web-root-dir-name (for static html+php)
+        cmd: 
+        # == server_name
+        # the server name without http
+        server_name: 
+        # === workers
+        # the number of workers to run, by default 1
+        workers: 1
 
-      # worker* (string): command to run, with a name. The name doesn't matter.
-      # it can be named anything
-      worker: 
-        
-    # threads (int): The total threads to use
-    threads: 4
-
-    # wsgi (bool): if runtime is python by default it will use wsgi, if false it will fallback to the command provided
-    wsgi: true
-
-    # nginx (object): nginx specific config. can be omitted
-    nginx:
-      include_file: ''
-    
-    # uwsgi (object): uwsgi specific config. can be omitted
-    uwsgi:
-      gevent: false
-      asyncio: false
+      # other processes (string): command to run, with a name. The name doesn't matter - It can be named anything
+      worker1: 
+        # == cmd - the command to execute
+        cmd:
+        # === workers
+        # the number of workers to run, by default 1
+        workers: 1
+      
+      # for simplicity you can pass the command in the name as is
+      # workerx: command
+      workerX: 
