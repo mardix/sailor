@@ -1022,6 +1022,7 @@ def multi_tail(filenames, catch_up=20):
     prefixes = {}
 
     # Set up current state for each log file
+    print("F2", filenames)
     for f in filenames:
         prefixes[f] = splitext(basename(f))[0]
         files[f] = open(f)
