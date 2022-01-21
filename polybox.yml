@@ -63,7 +63,8 @@ apps:
       postdeploy: 
 
     # *required - process - list of all processes to run. 
-    # 'web' is special, it’s the only process type that can receive external HTTP traffic  
+    # 'web' is special, it’s the only process type that can receive external HTTP traffic 
+    # only one web proctype can exist 
     # all other process name will be regular worker. 
     # The name doesn't matter 
     process:
@@ -82,6 +83,7 @@ apps:
         # the number of workers to run, by default 1
         workers: 1
 
+      # ==
       # other processes (string): command to run, with a name. The name doesn't matter - It can be named anything
       worker1: 
         # == cmd - the command to execute
@@ -90,6 +92,16 @@ apps:
         # the number of workers to run, by default 1
         workers: 1
       
-      # for simplicity you can pass the command in the name as is
-      # workerx: command
+      # == 
+      # for simplicity you can pass the command in the name as a string
+      # workerX: python script.py
       workerX: 
+      
+      # == cron
+      # Cron proc allows you to run script periodically like cronjob
+      # similar to web, only one cron can exist. And it can only have 1 worker
+      # Also, put the cron in quotes to prevent deploy error
+      # Simple cron expression: 
+      # minute [0-59], hour [0-23], day [0-31], month [1-12], weekday [1-7] (starting Monday, no ranges allowed on any field)
+      # cron: "* * * * * python cron.py"
+      cron: 

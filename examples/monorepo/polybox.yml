@@ -25,4 +25,6 @@ apps:
       web: 
         cmd: app:app
         server_name: python-domain.com
+      cron: "0 0 * * * python backup.py"
+
         

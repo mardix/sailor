@@ -17,8 +17,9 @@
 - Deploy multiple apps from a single repository
 - Runs long running apps
 - Runs workers/background applications
-- Easy configuration with polybox.yml
+- Easy configuration with polybox.yml manifest
 - Easy command line setup
+- Cron-like/Scheduled script executions
 - App management: `deploy, reload, stop, remove, scale, log, info` etc
 - Run scripts during application lifecycle: `release, predeploy, postdeploy, destroy`
 - SSL/HTTPS with LetsEncrypt and ZeroSSL
@@ -88,9 +89,15 @@ apps:
   - name: myapp.com
     runtime: python
     process:
+    
       web: 
         cmd: app:app
         server_name: myapp.com
+        workers: 2
+        
+      cron: "0 0 * * * python backup.py"
+      
+      myownworker: python events-listener.py
 
 ```
 
@@ -376,7 +383,8 @@ apps:
       postdeploy: 
 
     # *required - process - list of all processes to run. 
-    # 'web' is special, it’s the only process type that can receive external HTTP traffic  
+    # 'web' is special, it’s the only process type that can receive external HTTP traffic 
+    # only one web proctype can exist 
     # all other process name will be regular worker. 
     # The name doesn't matter 
     process:
@@ -395,6 +403,7 @@ apps:
         # the number of workers to run, by default 1
         workers: 1
 
+      # ==
       # other processes (string): command to run, with a name. The name doesn't matter - It can be named anything
       worker1: 
         # == cmd - the command to execute
@@ -403,9 +412,20 @@ apps:
         # the number of workers to run, by default 1
         workers: 1
       
-      # for simplicity you can pass the command in the name as is
-      # workerx: command
+      # == 
+      # for simplicity you can pass the command in the name as a string
+      # workerX: python script.py
       workerX: 
+      
+      # == cron
+      # Cron proc allows you to run script periodically like cronjob
+      # similar to web, only one cron can exist. And it can only have 1 worker
+      # Also, put the cron in quotes to prevent deploy error
+      # Simple cron expression: 
+      # minute [0-59], hour [0-23], day [0-31], month [1-12], weekday [1-7] (starting Monday, no ranges allowed on any field)
+      # cron: "* * * * * python cron.py"
+      cron: 
+
 ```
 
 
@@ -417,10 +437,11 @@ TODO
 ## CHANGELOG
 
 - 1.1.0
-  - added new proctype 'cron' To help execute cron. `cron` workers, which require a simplified `cron` expression preceding the command to be run (e.g. `cron: */5 * * * * python batch.py` to run a batch every 
-  - renamed command: 'app' -> 'apps'
-  - fixed bug: log issues due to permission
-  - remove environment settings from command. Can now be added in the yml file
+  - added new proctype 'cron' To help execute cron. `cron` workers, which require a simplified `cron` expression preceding the command to be run (e.g. `cron: * * * * * python batch.py` to run a batch every minyte
+  ```
+  proces:
+    cron: "* * * * * python cron.py"
+  ```
   - expand process list to allow process to have extended properties as dict/hash:
   ```
   process:
@@ -433,9 +454,11 @@ TODO
       cmd:
       workers:
   ```
-  - `server_name` can now be added in `process.web` 
+  - renamed command: 'app' -> 'apps'
+  - fixed bug: log issues due to permission
+  - remove environment settings from command. Can now be added in the yml file
+  - `server_name` can now be added in `process.web.server_name` 
   - allow to system:update to be able to update from a different branch `system:update 1.2.0`
-  - WIP: cron
 
 
 - 1.0.1

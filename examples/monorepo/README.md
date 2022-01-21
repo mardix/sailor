@@ -4,6 +4,8 @@ This is an example of a mono repo, where Polybox can deploy multiple apps from t
 
 It uses Express/Node, Flask/Python to build both app.
 
+Also, it uses cron to execute periodically
+
 ---
 
 ## Set up GIT remote
