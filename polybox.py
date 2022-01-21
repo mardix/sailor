@@ -1247,6 +1247,7 @@ def cmd_logs(app):
     app = sanitize_app_name(app)
     logfiles = glob(join(LOG_ROOT, app, '*.log'))
     if len(logfiles):
+        print("LD", logfiles)
         for line in multi_tail(app, logfiles):
             print(line.strip())
     else:
