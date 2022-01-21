@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.0" 
+VERSION = "1.1.1" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -1349,6 +1349,31 @@ def cmd_update(branch="master"):
     echo("...update completed!", fg="green")
 
 
+@cli.command("system:set-ssh")
+@click.argument('public_key_file')
+def cmd_setup_ssh(public_key_file):
+    """Set up a new SSH key (use - for stdin)"""
+
+    def add_helper(key_file):
+        if exists(key_file):
+            try:
+                fingerprint = str(check_output('ssh-keygen -lf ' + key_file, shell=True)).split(' ', 4)[1]
+                key = open(key_file, 'r').read().strip()
+                echo("Adding key '{}'.".format(fingerprint), fg='white')
+                setup_authorized_keys(fingerprint, BOX_SCRIPT, key)
+            except Exception:
+                echo("Error: invalid public key file '{}': {}".format(key_file, format_exc()), fg='red')
+        elif '-' == public_key_file:
+            buffer = "".join(stdin.readlines())
+            with NamedTemporaryFile(mode="w") as f:
+                f.write(buffer)
+                f.flush()
+                add_helper(f.name)
+        else:
+            echo("Error: public key file '{}' not found.".format(key_file), fg='red')
+
+    add_helper(public_key_file)
+    
 # --- Internal commands ---
 
 

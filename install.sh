@@ -41,7 +41,7 @@ sudo adduser --disabled-password --gecos 'PaaS access' --ingroup www-data $PAAS_
 # copy your public key to /tmp (assuming it's the first entry in authorized_keys)
 head -1 ~/.ssh/authorized_keys > /tmp/pubkey
 # install polybox and have it set up SSH keys and default files
-sudo su - $PAAS_USERNAME -c "wget https://raw.githubusercontent.com/mardix/polybox/master/polybox.py && python3 ~/polybox.py init && python3 ~/polybox.py set-ssh /tmp/pubkey"
+sudo su - $PAAS_USERNAME -c "wget https://raw.githubusercontent.com/mardix/polybox/master/polybox.py && python3 ~/polybox.py init && python3 ~/polybox.py system:set-ssh /tmp/pubkey"
 rm /tmp/pubkey
 
 
