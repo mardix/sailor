@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.0-b.03" 
+VERSION = "1.1.0-b.04" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -911,7 +911,7 @@ def spawn_worker(app, kind, command, env, ordinal=1):
     metrics_path = join(METRICS_ROOT, app)
     available = join(UWSGI_AVAILABLE, '{app:s}___{kind:s}.{ordinal:d}.ini'.format(**locals()))
     enabled = join(UWSGI_ENABLED, '{app:s}___{kind:s}.{ordinal:d}.ini'.format(**locals()))
-    log_file = join(LOG_ROOT, app, kind)
+    log_file = join(LOG_ROOT, app, app_kind)
     
     # Create metrics dir
     if not exists(metrics_path):
