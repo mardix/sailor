@@ -1004,8 +1004,7 @@ def remove_nginx_conf(app):
     if exists(nginx_conf):
         remove(nginx_conf)
 
-
-def multi_tail(filenames, catch_up=20):
+def multi_tail(app, filenames, catch_up=20):
     """Tails multiple log files"""
 
     # Seek helper
@@ -1022,10 +1021,9 @@ def multi_tail(filenames, catch_up=20):
     prefixes = {}
 
     # Set up current state for each log file
-    print("F2", filenames)
     for f in filenames:
         prefixes[f] = splitext(basename(f))[0]
-        files[f] = open(f)
+        files[f] = open(f, "rt", encoding="utf-8", errors="ignore")
         inodes[f] = stat(f).st_ino
         files[f].seek(0, 2)
 
@@ -1033,7 +1031,7 @@ def multi_tail(filenames, catch_up=20):
 
     # Grab a little history (if any)
     for f in filenames:
-        for line in deque(open(f), catch_up):
+        for line in deque(open(f, "rt", encoding="utf-8", errors="ignore"), catch_up):
             yield "{} | {}".format(prefixes[f].ljust(longest), line)
 
     while True:
@@ -1041,9 +1039,7 @@ def multi_tail(filenames, catch_up=20):
         # Check for updates on every file
         for f in filenames:
             line = peek(files[f])
-            if not line:
-                continue
-            else:
+            if line:
                 updated = True
                 yield "{} | {}".format(prefixes[f].ljust(longest), line)
 
@@ -1057,7 +1053,6 @@ def multi_tail(filenames, catch_up=20):
                         inodes[f] = stat(f).st_ino
                 else:
                     filenames.remove(f)
-
 
 def _delete_app(app, delete_app=True, remove_certs=True):
     
@@ -1248,7 +1243,7 @@ def cmd_logs(app):
     app = sanitize_app_name(app)
     logfiles = glob(join(LOG_ROOT, app, '*.log'))
     if len(logfiles):
-        for line in multi_tail(logfiles):
+        for line in multi_tail(app, logfiles):
             print(line.strip())
     else:
         print("No logs found for app '{}'.".format(app))
