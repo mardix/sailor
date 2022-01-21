@@ -25,6 +25,7 @@ from multiprocessing import cpu_count
 from os import chmod, getgid, getuid, symlink, unlink, remove, stat, listdir, environ, makedirs, O_NONBLOCK
 from os.path import abspath, basename, dirname, exists, getmtime, join, realpath, splitext
 from re import sub
+import re
 from shutil import copyfile, rmtree, which
 from socket import socket, AF_INET, SOCK_STREAM
 from sys import argv, stdin, stdout, stderr, version_info, exit
@@ -69,6 +70,9 @@ if 'sbin' not in environ['PATH']:
 
 if BOX_BIN not in environ['PATH']:
     environ['PATH'] = BOX_BIN + ":" + environ['PATH']
+
+CRON_REGEXP = "^((?:(?:\*\/)?\d+)|\*) ((?:(?:\*\/)?\d+)|\*) ((?:(?:\*\/)?\d+)|\*) ((?:(?:\*\/)?\d+)|\*) ((?:(?:\*\/)?\d+)|\*) (.*)$"
+
 
 # -----------------------------------------------------------------------------
 # NGINX
@@ -372,6 +376,20 @@ def parse_app_processes(app):
                     proc["web"]["server_name"] = [sn]
             if not proc["web"].get("server_name"):
                 _error("missing 'process.web.server_name' in app: %s" % app)
+    # cron
+    if "cron" in proc:
+        # verify cron patterns
+        cmd = proc["cron"]["cmd"]
+        limits = [59, 24, 31, 12, 7]
+        matches = re.match(CRON_REGEXP, cmd).groups()
+        if matches:
+            for i in range(len(limits)):
+                if int(matches[i].replace("*/", "").replace("*", "1")) > limits[i]:
+                    _error("invalid cron command 'cron.cmd' in app: %s" % app)
+        # cron must have 1 worker                 
+        if proc["cron"].get("workers") != 1:
+            proc["cron"]["workers"] = 1
+            
     return proc
     
 
@@ -660,6 +678,8 @@ def spawn_app(app, deltas={}):
     runtime = get_app_runtime(app)
     workers = parse_app_processes(app)
     worker_count = {k: v["workers"] for k,v in workers.items()}
+    if "cron" in worker_count:
+        worker_count["cron"] = 1
     virtualenv_path = join(ENV_ROOT, app)
     scaling = read_settings(app, 'SCALING')
     
@@ -859,7 +879,7 @@ def spawn_app(app, deltas={}):
             if not exists(enabled):
                 echo("......-> spawning '{app:s}:{k:s}.{w:d}'".format(**locals()), fg='green')
                 _cmd = workers[k]["cmd"]
-                spawn_worker(app, k, _cmd, env)
+                spawn_worker(app, k, _cmd, env, w)
 
     # Remove unnecessary workers (leave logfiles)
     for k, v in to_destroy.items():
@@ -872,7 +892,7 @@ def spawn_app(app, deltas={}):
     return env
 
 
-def spawn_worker(app, kind, command, env):
+def spawn_worker(app, kind, command, env, ordinal=1):
     """Set up and deploy a single worker of a given kind"""
 
     app_kind = kind
@@ -932,6 +952,10 @@ def spawn_worker(app, kind, command, env):
         echo("......-> nginx will talk to uWSGI via %s" % http, fg='yellow')
         settings.extend([('http', http), ('http-socket', http)])
 
+    elif app_kind == 'cron':
+        settings.extend([['cron', command.replace("*/", "-").replace("*", "-1")]])
+        echo("......-> uwsgi scheduled cron for {command}".format(**locals()), fg='yellow')
+        
     # shell
     elif app_kind == 'shell':
         echo("......-> nginx will talk to the web process via %s" % http, fg='yellow')

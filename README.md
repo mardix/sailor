@@ -417,6 +417,7 @@ TODO
 ## CHANGELOG
 
 - 1.1.0
+  - added new proctype 'cron' To help execute cron. `cron` workers, which require a simplified `cron` expression preceding the command to be run (e.g. `cron: */5 * * * * python batch.py` to run a batch every 
   - renamed command: 'app' -> 'apps'
   - fixed bug: log issues due to permission
   - remove environment settings from command. Can now be added in the yml file
@@ -434,7 +435,8 @@ TODO
   ```
   - `server_name` can now be added in `process.web` 
   - allow to system:update to be able to update from a different branch `system:update 1.2.0`
-  - wip: cron
+  - WIP: cron
+
 
 - 1.0.1
   - fixed letsencrypt issue
