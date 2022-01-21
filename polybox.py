@@ -1236,12 +1236,13 @@ def cmd_destroy(app):
 
 @cli.command("log")
 @click.argument('app')
-def cmd_logs(app):
-    """Read tail logs [<app>]"""
+@click.argument('process', nargs=1, default='*')
+def cmd_logs(app, process):
+    """Tail running logs - [<app>] *[<proc>]"""
 
     check_app(app)
     app = sanitize_app_name(app)
-    logfiles = glob(join(LOG_ROOT, app, '*.log'))
+    logfiles = glob(join(LOG_ROOT, app, process + '.*.log'))
     if len(logfiles):
         for line in multi_tail(app, logfiles):
             print(line.strip())
