@@ -911,7 +911,8 @@ def spawn_worker(app, kind, command, env, ordinal=1):
     metrics_path = join(METRICS_ROOT, app)
     available = join(UWSGI_AVAILABLE, '{app:s}___{kind:s}.{ordinal:d}.ini'.format(**locals()))
     enabled = join(UWSGI_ENABLED, '{app:s}___{kind:s}.{ordinal:d}.ini'.format(**locals()))
-
+    log_file = join(LOG_ROOT, app, kind)
+    
     # Create metrics dir
     if not exists(metrics_path):
         makedirs(metrics_path)
