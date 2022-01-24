@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.1" 
+VERSION = "1.1.2" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -402,11 +402,11 @@ def get_app_config(app):
         _error("missing 'process' for app: %s" % app)
 
     if "web" in config["process"]:
-        if isinstance(config["process"]["web"], dict) and not config["process"]["web"].get("server_name"):
+        if isinstance(config["process"]["web"], dict):
+            if not config["process"]["web"].get("server_name"):
                 _error("missing 'process.web.server_name' in app: %s" % app)
-        else:
-            if "server_name" not in config:
-                _error("missing 'server_name' in app: %s" % app)
+        elif "server_name" not in config:
+            _error("missing 'server_name' in app: %s" % app)
 
     cdata = sanitize_config_data(config)
     processes = parse_app_processes(app)
