@@ -1152,12 +1152,12 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
             print(" - Port: ", port)
         print()     
         print(":: Deploy Info")        
-        print("- Revision: ", deployinfo.get("revision"))
-        print("- Received: ", deployinfo.get("received"))
+        print(" - Revision: ", deployinfo.get("revision"))
+        print(" - Received: ", deployinfo.get("received"))
         if deployinfo.get("deployed") and deployinfo.get("deployed") != "0":
-            print("- Deployed: ", deployinfo.get("deployed"))
+            print(" - Deployed: ", deployinfo.get("deployed"))
         if deployinfo.get("stopped") and deployinfo.get("stopped") != "0":
-            print("- Stopped: ", deployinfo.get("stopped"))
+            print(" - Stopped: ", deployinfo.get("stopped"))
         
                 
         if show_metrics:
