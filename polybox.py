@@ -1137,20 +1137,29 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
     if minimal:
         print("- %s | %s | %s" % (app, status, deployinfo.get("revision")))
     else:
+        if "web" in workers:
+            workers_len = workers_len - 1 # not counting the web as a worker
+                   
         print("-" * 40)
         print("Name: ", app)        
         print("Runtime: ", runtime)
         print("Status: ", status)
-        print("Revision: ", deployinfo.get("revision"))
-        print("Received: ", deployinfo.get("received"))
-        print("Deployed: ", deployinfo.get("deployed"))
-        if "web" in workers:
-            workers_len = workers_len - 1 # not counting the web as a worker
-            print("Web: Yes")
-            print("Server Name: ", domain_name)
-            print("Port: ", port)
         print("Workers: ", workers_len)
+        if "web" in workers:
+            print()     
+            print(":: Web")              
+            print(" - Server Name: ", domain_name)
+            print(" - Port: ", port)
+        print()     
+        print(":: Deploy Info")        
+        print("- Revision: ", deployinfo.get("revision"))
+        print("- Received: ", deployinfo.get("received"))
+        if deployinfo.get("deployed") and deployinfo.get("deployed") != "0":
+            print("- Deployed: ", deployinfo.get("deployed"))
+        if deployinfo.get("stopped") and deployinfo.get("stopped") != "0":
+            print("- Stopped: ", deployinfo.get("stopped"))
         
+                
         if show_metrics:
             metrics = get_app_metrics(app)
             avg = metrics.get("avg", "-")
@@ -1158,10 +1167,10 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
             vsz = metrics.get("vsz", "-")
             tx = metrics.get("tx", "-") 
             print()     
-            print(":: Metrics")
+            print(":: App Metrics")
             print(" - AVG: ", avg)
-            print(" - RSS: ", rss)
-            print(" - VSZ: ", vsz)
+            #print(" - RSS: ", rss)
+            #print(" - VSZ: ", vsz)
             print(" - TX: ", tx)
         
         if show_workers:
@@ -1228,6 +1237,7 @@ def _reload_app(app):
     check_app(app)
     app = sanitize_app_name(app)
     remove_nginx_conf(app)
+    write_deployinfo(app, {"deployed": utcnow(), "stopped": 0}) 
     cleanup_uwsgi_enabled_ini(app)
     echo("......-> reloading '{}'...".format(app), fg='yellow')
     spawn_app(app)
@@ -1349,6 +1359,7 @@ def cmd_stop(app):
     app = sanitize_app_name(app)
     remove_nginx_conf(app)
     cleanup_uwsgi_enabled_ini(app)
+    write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
     echo("......-> '%s' stopped" % app, fg='yellow')
 
 @cli.command("apps:stop-all")
@@ -1360,6 +1371,7 @@ def cmd_stop_all():
             app = sanitize_app_name(app)
             remove_nginx_conf(app)
             cleanup_uwsgi_enabled_ini(app)
+            write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
             echo("......-> '%s' stopped" % app, fg='yellow')
 
 
