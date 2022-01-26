@@ -1,0 +1,3 @@
+cat /home/polybox/.polybox/repos/test-console-api/HEAD
+cat /home/polybox/.polybox/repos/test-console-api/HEAD
+cat .git/`cat .git/HEAD | cut -d \  -f 2`

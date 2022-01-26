@@ -436,6 +436,10 @@ TODO
 
 ## CHANGELOG
 
+- 1.2.0
+  - Added revision hash info and deploy time. 
+  - Log deploy info 
+  
 - 1.1.0
   - added new proctype 'cron' To help execute cron. `cron` workers, which require a simplified `cron` expression preceding the command to be run (e.g. `cron: * * * * * python batch.py` to run a batch every minyte
   ```

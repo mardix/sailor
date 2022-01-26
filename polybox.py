@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Polybox"
-VERSION = "1.1.2" 
+VERSION = "1.2.0" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -64,6 +64,8 @@ UWSGI_ROOT = abspath(join(DOT_ROOT, "uwsgi"))
 ACME_ROOT = environ.get('ACME_ROOT', join(environ['HOME'], '.acme.sh'))
 ACME_WWW = abspath(join(DOT_ROOT, "acme"))
 UWSGI_LOG_MAXSIZE = '1048576'
+# deeploy info file
+DEPLOYINFO_FILE = join(DOT_ROOT, "DEPLOYINFO")
 
 if 'sbin' not in environ['PATH']:
     environ['PATH'] = "/usr/local/sbin:/usr/sbin:/sbin:" + environ['PATH']
@@ -222,6 +224,9 @@ INTERNAL_NGINX_STATIC_CLAUSES = """
 """
 # -----------------------------------------------------------------------------
 
+def utcnow():
+    return datetime.utcnow()
+  
 def print_title(title=None, app=None):
     print("-" * 80)
     print("Polybox v%s" % VERSION)
@@ -278,6 +283,29 @@ def install_acme_sh():
     echo("......-> Installing acme.sh", fg="green")
     call("curl https://get.acme.sh | sh -s", cwd=BOX_ROOT, shell=True)
 
+
+def write_deployinfo(app, props:dict):
+    """ To write deploy info  """
+    config = configparser.ConfigParser()   
+    config.optionxform = str
+    if exists(DEPLOYINFO_FILE):          
+      config.read(DEPLOYINFO_FILE)
+    if not config.has_section(app):
+      config.add_section(app)
+    for k, v in props.items():
+      config.set(app, k, str(v))
+    with open(DEPLOYINFO_FILE, "w+") as f:
+        config.write(f)    
+    
+def read_deployinfo(app):
+    """ To read deploy info """
+    config = configparser.ConfigParser()  
+    config.optionxform = str           
+    if exists(DEPLOYINFO_FILE):          
+      config.read(DEPLOYINFO_FILE)
+    if config.has_section(app):
+      return {o: config.get(app, o) for o in config.options(app)}
+    return {}
 
 def _get_env(app):
     env_file = join(SETTINGS_ROOT, app, "ENV")
@@ -524,7 +552,9 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         echo("......-> Deploying app '{}'".format(app), fg='green')
         call('git fetch --quiet', cwd=app_path, env=env, shell=True)
         if newrev:
+            write_deployinfo(app, {"revision": newrev, "received": utcnow()})
             call('git reset --hard {}'.format(newrev), cwd=app_path, env=env, shell=True)
+        write_deployinfo(app, {"deployed": utcnow()})    
         call('git submodule init', cwd=app_path, env=env, shell=True)
         call('git submodule update', cwd=app_path, env=env, shell=True)
 
@@ -1102,15 +1132,18 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
     workers_len = len(workers.keys()) if workers else 0 
     running = True if (("static" and exists(nginx_file)) or app in enabled_files) else app in enabled_files
     status = "running" if running else "not running"
+    deployinfo = read_deployinfo(app)
     
     if minimal:
-        print("- %s : %s " % (app, status))
+        print("- %s | %s | %s" % (app, status, deployinfo.get("revision")))
     else:
-        print("*" * 40)
         print("-" * 40)
         print("Name: ", app)        
         print("Runtime: ", runtime)
         print("Status: ", status)
+        print("Revision: ", deployinfo.get("revision"))
+        print("Received: ", deployinfo.get("received"))
+        print("Deployed: ", deployinfo.get("deployed"))
         if "web" in workers:
             workers_len = workers_len - 1 # not counting the web as a worker
             print("Web: Yes")
@@ -1126,10 +1159,10 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
             tx = metrics.get("tx", "-") 
             print()     
             print(":: Metrics")
-            print("  AVG: ", avg)
-            print("  RSS: ", rss)
-            print("  VSZ: ", vsz)
-            print("  TX: ", tx)
+            print(" - AVG: ", avg)
+            print(" - RSS: ", rss)
+            print(" - VSZ: ", vsz)
+            print(" - TX: ", tx)
         
         if show_workers:
             env = read_settings(app, 'SCALING')
@@ -1137,7 +1170,7 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
                 print()      
                 print(":: Processes workers")
                 for k, v in env.items():
-                    print("  %s: %s" % (k, v)) 
+                    print(" - %s: %s" % (k, v)) 
         
         if show_envs:  
             env_file = join(SETTINGS_ROOT, app, 'ENV')
@@ -1429,6 +1462,7 @@ def cmd_git_hook(app):
     for line in stdin:
         oldrev, newrev, refname = line.strip().split(" ")
         if not exists(app_path):
+            write_deployinfo(app, {"created": utcnow()})
             echo("......-> Creating app '{}'".format(app), fg='green')
             makedirs(app_path)
             call('git clone --quiet {} {}'.format(repo_path, app), cwd=APP_ROOT, shell=True)
@@ -1459,7 +1493,7 @@ cat | BOX_ROOT="{BOX_ROOT:s}" {BOX_SCRIPT:s} git-hook {app:s}""".format(**env))
     call('git-shell -c "{}" '.format(argv[1] + " '{}'".format(app)), cwd=GIT_ROOT, shell=True)
 
 
-def cmd_upload_pack(app):
+def cmd_git_upload_pack(app):
     """INTERNAL: Handle git upload pack for an app"""
     app = sanitize_app_name(app)
     env = globals()
