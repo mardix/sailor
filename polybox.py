@@ -552,9 +552,9 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         echo("......-> Deploying app '{}'".format(app), fg='green')
         call('git fetch --quiet', cwd=app_path, env=env, shell=True)
         if newrev:
-            write_deployinfo(app, {"revision": newrev, "received": utcnow()})
+            write_deployinfo(app, {"revision": newrev, "received": utcnow(), "deployed": 0, "stopped": 0})
             call('git reset --hard {}'.format(newrev), cwd=app_path, env=env, shell=True)
-        write_deployinfo(app, {"deployed": utcnow()})    
+        write_deployinfo(app, {"deployed": utcnow(), "stopped": 0})    
         call('git submodule init', cwd=app_path, env=env, shell=True)
         call('git submodule update', cwd=app_path, env=env, shell=True)
 
@@ -1169,9 +1169,10 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
             print()     
             print(":: App Metrics")
             print(" - AVG: ", avg)
+            print(" - TX: ", tx)
             #print(" - RSS: ", rss)
             #print(" - VSZ: ", vsz)
-            print(" - TX: ", tx)
+            
         
         if show_workers:
             env = read_settings(app, 'SCALING')
