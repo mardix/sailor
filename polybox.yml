@@ -71,27 +71,33 @@ apps:
       # == web
       # (dict/object): it’s the only process type that can receive external HTTP traffic
       web: 
-        # == cmd - the command to execute
+        # == cmd(str) - the command to execute
         #-> cmd: app:app (for python using wsgi)
         #-> cmd: node server.js 2>&1 cat (For other web app which requires a server command)
         #-> cmd: /web-root-dir-name (for static html+php)
         cmd: 
-        # == server_name
-        # the server name without http
+        # == server_name(str)
+        # the server name without http/https
         server_name: 
-        # === workers
+        # === workers(int)
         # the number of workers to run, by default 1
         workers: 1
+        # === enabled(bool)
+        # a boolean to enable/disable this process, by default true
+        enabled: true
 
       # ==
       # other processes (string): command to run, with a name. The name doesn't matter - It can be named anything
       worker1: 
-        # == cmd - the command to execute
+        # == cmd(str) - the command to execute
         cmd:
-        # === workers
+        # === workers(int)
         # the number of workers to run, by default 1
         workers: 1
-      
+        # === available(bool)
+        # a boolean to enable/disable this process, by default true
+        enabled: true
+              
       # == 
       # for simplicity you can pass the command in the name as a string
       # workerX: python script.py

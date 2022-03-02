@@ -391,26 +391,33 @@ apps:
       # == web
       # (dict/object): it’s the only process type that can receive external HTTP traffic
       web: 
-        # == cmd - the command to execute
+        # == cmd(str) - the command to execute
         #-> cmd: app:app (for python using wsgi)
         #-> cmd: node server.js 2>&1 cat (For other web app which requires a server command)
         #-> cmd: /web-root-dir-name (for static html+php)
         cmd: 
-        # == server_name
-        # the server name without http
+        # == server_name(str)
+        # the server name without http/https
         server_name: 
-        # === workers
+        # === workers(int)
         # the number of workers to run, by default 1
         workers: 1
+        # === enabled(bool)
+        # a boolean to enable/disable this process, by default true
+        enabled: true
 
       # ==
       # other processes (string): command to run, with a name. The name doesn't matter - It can be named anything
       worker1: 
-        # == cmd - the command to execute
+        # == cmd(str) - the command to execute
         cmd:
-        # === workers
+        # === workers(int)
         # the number of workers to run, by default 1
         workers: 1
+        # === enabled(bool)
+        # a boolean to enable/disable this process, by default true
+        enabled: true
+            
       
       # == 
       # for simplicity you can pass the command in the name as a string
@@ -435,6 +442,9 @@ TODO
 - Allow multiple server name on same app with their own ssl
 
 ## CHANGELOG
+
+- 1.3.0
+  - Added process option `enabled` to run/not-run a process. Especially if you don't want to run a process without removing the code.
 
 - 1.2.0
   - Added revision hash info and deploy time. 

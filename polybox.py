@@ -382,6 +382,12 @@ def parse_app_processes(app):
     proc = {}
     for k, v in approc.items():
         if isinstance(v, dict):
+            
+            # Skip if the worker is !enabled -> disabled .
+            # by default it's enabled. Must set 'enabled=false' to disable
+            if v.get('enabled') is False:
+                continue
+            
             if "cmd" not in v:
                 _error("Missing 'cmd' in %s:%s" % (app, k))
             if "workers" not in v:
