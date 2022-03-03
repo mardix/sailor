@@ -659,7 +659,7 @@ def setup_node_runtime(app, deltas={}):
     }
 
     version = env.get("RUNTIME_VERSION")
-    print("NODE RUNTIME VERSION", version)
+    print("NODE RUNTIME VERSION 2", version)
     if version:
         node_binary = join(virtualenv_path, "bin", "node")
         installed = check_output("{} -v".format(node_binary), cwd=join(APP_ROOT, app), env=env,
@@ -757,7 +757,6 @@ def setup_python_runtime(app, deltas={}):
     requirements = join(APP_ROOT, app, 'requirements.txt')
     activation_script = join(virtualenv_path, 'bin', 'activate_this.py')
     config = get_app_config(app)
-    version = int(config.get("RUNTIME_VERSION", "3"))
 
     first_time = False
     if not exists(activation_script):
