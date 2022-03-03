@@ -633,9 +633,10 @@ def get_spawn_env(app):
     env.update(read_settings(app, 'CUSTOM'))
     return env 
 
-def setup_node_runtimeX(app, deltas={}):
+def setup_node_runtime(app, deltas={}):
     """Deploy a Node  application"""
 
+    config = get_app_config(app)
     virtualenv_path = join(ENV_ROOT, app)
     node_path = join(ENV_ROOT, app, "node_modules")
     node_path_tmp = join(APP_ROOT, app, "node_modules")
@@ -656,8 +657,8 @@ def setup_node_runtimeX(app, deltas={}):
         "PATH": ':'.join([join(virtualenv_path, "bin"), join(node_path, ".bin"), environ['PATH']])
     }
 
-    version = env.get("RUNTIME_VERSION")
-
+    version = config.get("RUNTIME_VERSION")
+    print("NODE RUNTIME VERSION", version)
     if version:
         node_binary = join(virtualenv_path, "bin", "node")
         installed = check_output("{} -v".format(node_binary), cwd=join(APP_ROOT, app), env=env,
@@ -683,7 +684,7 @@ def setup_node_runtimeX(app, deltas={}):
             call('npm install --prefix {} --package-lock=false'.format(npm_prefix), cwd=join(APP_ROOT, app), env=env, shell=True)
 
 
-def setup_node_runtime(app, deltas={}):
+def setup_node_runtimeZ(app, deltas={}):
     """Deploy a Node  application"""
 
     config = get_app_config(app)
@@ -1065,16 +1066,12 @@ def spawn_worker(app, kind, command, env, ordinal=1):
     # shell
     elif app_kind == 'shell':
         echo("......-> nginx will talk to the web process via %s" % http, fg='yellow')
-        if runtime == "node" and "nvm use" not in command:
-            command = "nvm use && " + command
         settings.append(('attach-daemon', command))
 
     elif app_kind == 'static':
         echo("......-> nginx will serve static HTML/PHP files only".format(**env), fg='yellow')
         
-    else:
-        if runtime == "node" and "nvm use" not in command:
-            command = "nvm use && " + command        
+    else:      
         settings.append(('attach-daemon', command))
 
     if app_kind in ['wsgi', 'shell']:
