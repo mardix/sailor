@@ -638,6 +638,8 @@ def setup_node_runtime(app, deltas={}):
     virtualenv_path = join(ENV_ROOT, app)
     node_path = join(ENV_ROOT, app, "node_modules")
     node_path_tmp = join(APP_ROOT, app, "node_modules")
+    node_modules_symlink = join(APP_ROOT, app, "node_modules")
+    npm_prefix = abspath(join(node_path, ".."))
     deps = join(APP_ROOT, app, 'package.json')
 
     first_time = False
@@ -649,7 +651,7 @@ def setup_node_runtime(app, deltas={}):
     env = {
         'VIRTUAL_ENV': virtualenv_path,
         'NODE_PATH': node_path,
-        'NPM_CONFIG_PREFIX': abspath(join(node_path, "..")),
+        'NPM_CONFIG_PREFIX': npm_prefix,
         "PATH": ':'.join([join(virtualenv_path, "bin"), join(node_path, ".bin"), environ['PATH']])
     }
 
@@ -665,7 +667,7 @@ def setup_node_runtime(app, deltas={}):
             if installed and len(started):
                 echo("Warning: Can't update node with app running. Stop the app & retry.", fg='yellow')
             else:
-                echo("......-> Installing node version '{RUNTIME_VERSION:s}' using nodeenv".format(**env), fg='green')
+                echo("......-> Installing node version '{RUNTIME_VERSION:s}' using nodeenv".format(**env))
                 call("nodeenv --prebuilt --node={RUNTIME_VERSION:s} --clean-src --force {VIRTUAL_ENV:s}".format(
                     **env), cwd=virtualenv_path, env=env, shell=True)
         else:
@@ -673,10 +675,11 @@ def setup_node_runtime(app, deltas={}):
 
     if exists(deps):
         if first_time or getmtime(deps) > getmtime(node_path):
-            echo("......-> Running npm for '{}'".format(app), fg='green')
-            symlink(node_path, node_path_tmp)
-            call('npm install', cwd=join(APP_ROOT, app), env=env, shell=True)
-            unlink(node_path_tmp)
+            copyfile(join(APP_ROOT, app, 'package.json'), join(ENV_ROOT, app, 'package.json'))
+            if not exists(node_modules_symlink):
+                symlink(node_path, node_modules_symlink)
+            echo("......-> Running npm for '{}'".format(app))
+            call('npm install --prefix {} --package-lock=false'.format(npm_prefix), cwd=join(APP_ROOT, app), env=env, shell=True)
 
 
 def setup_python_runtime(app, deltas={}):
