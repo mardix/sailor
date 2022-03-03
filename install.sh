@@ -48,6 +48,9 @@ rm /tmp/pubkey
 sudo ln /home/$PAAS_USERNAME/.polybox/uwsgi/uwsgi.ini /etc/uwsgi/apps-enabled/polybox.ini
 sudo systemctl restart uwsgi
 
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+source ~/.bashrc
+
 cd /tmp
 wget https://raw.githubusercontent.com/mardix/polybox/master/incron.conf
 wget https://raw.githubusercontent.com/mardix/polybox/master/nginx.conf

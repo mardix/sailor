@@ -615,6 +615,7 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
                 # Once on git push
                 if release is True:
                     run_app_scripts(app, "release")
+                    
                 run_app_scripts(app, "predeploy")
                 spawn_app(app, deltas)
                 run_app_scripts(app, "postdeploy")
@@ -632,7 +633,7 @@ def get_spawn_env(app):
     env.update(read_settings(app, 'CUSTOM'))
     return env 
 
-def setup_node_runtime(app, deltas={}):
+def setup_node_runtimeX(app, deltas={}):
     """Deploy a Node  application"""
 
     virtualenv_path = join(ENV_ROOT, app)
@@ -680,6 +681,69 @@ def setup_node_runtime(app, deltas={}):
                 symlink(node_path, node_modules_symlink)
             echo("......-> Running npm for '{}'".format(app))
             call('npm install --prefix {} --package-lock=false'.format(npm_prefix), cwd=join(APP_ROOT, app), env=env, shell=True)
+
+
+def setup_node_runtime(app, deltas={}):
+    """Deploy a Node  application"""
+
+    virtualenv_path = join(ENV_ROOT, app)
+    node_path = join(ENV_ROOT, app, "node_modules")
+    nvmrc_env_path = join(ENV_ROOT, app, ".nvmrc")
+    nvmrc_app_path = join(APP_ROOT, app, ".nvmrc")
+    
+    node_path_tmp = join(APP_ROOT, app, "node_modules")
+    node_modules_symlink = join(APP_ROOT, app, "node_modules")
+    npm_prefix = abspath(join(node_path, ".."))
+    deps = join(APP_ROOT, app, 'package.json')
+
+    first_time = False
+    if not exists(node_path):
+        echo("......-> Creating node_modules for '{}'".format(app), fg='green')
+        makedirs(node_path)
+        first_time = True
+
+    env = {
+        'VIRTUAL_ENV': virtualenv_path,
+        'NODE_PATH': node_path,
+        'NPM_CONFIG_PREFIX': npm_prefix,
+        "PATH": ':'.join([join(virtualenv_path, "bin"), join(node_path, ".bin"), environ['PATH']])
+    }
+
+    version = env.get("RUNTIME_VERSION")
+    
+    # Add .nvmrc
+    if not exists(nvmrc_app_path):
+        if exists(nvmrc_env_path):
+            symlink(nvmrc_env_path, nvmrc_app_path)
+        else:
+            with open(nvmrc_env_path, "w+") as f:
+                f.write(version)
+            symlink(nvmrc_env_path, nvmrc_app_path)
+            
+    
+    #if version:
+        # node_binary = join(virtualenv_path, "bin", "node")
+        # installed = check_output("{} -v".format(node_binary), cwd=join(APP_ROOT, app), env=env,
+        #                          shell=True).decode("utf8").rstrip("\n") if exists(node_binary) else ""
+
+        # if not installed.endswith(version):
+        #     started = glob(join(UWSGI_ENABLED, '{}*.ini'.format(app)))
+        #     if installed and len(started):
+        #         echo("Warning: Can't update node with app running. Stop the app & retry.", fg='yellow')
+        #     else:
+        #         echo("......-> Installing node version '{RUNTIME_VERSION:s}' using nodeenv".format(**env))
+        #         call("nodeenv --prebuilt --node={RUNTIME_VERSION:s} --clean-src --force {VIRTUAL_ENV:s}".format(
+        #             **env), cwd=virtualenv_path, env=env, shell=True)
+        # else:
+        #     echo("......-> Node is installed at {}.".format(version))
+
+    if exists(deps):
+        if first_time or getmtime(deps) > getmtime(node_path):
+            copyfile(join(APP_ROOT, app, 'package.json'), join(ENV_ROOT, app, 'package.json'))
+            if not exists(node_modules_symlink):
+                symlink(node_path, node_modules_symlink)
+            echo("......-> Running nvm & npm for '{}'".format(app))
+            call('nvm install && nvm use && npm install --prefix {} --package-lock=false'.format(npm_prefix), cwd=join(APP_ROOT, app), env=env, shell=True)
 
 
 def setup_python_runtime(app, deltas={}):
@@ -999,12 +1063,16 @@ def spawn_worker(app, kind, command, env, ordinal=1):
     # shell
     elif app_kind == 'shell':
         echo("......-> nginx will talk to the web process via %s" % http, fg='yellow')
+        if runtime == "node" and "nvm use" not in command:
+            command = "nvm use && " + command
         settings.append(('attach-daemon', command))
 
     elif app_kind == 'static':
         echo("......-> nginx will serve static HTML/PHP files only".format(**env), fg='yellow')
         
     else:
+        if runtime == "node" and "nvm use" not in command:
+            command = "nvm use && " + command        
         settings.append(('attach-daemon', command))
 
     if app_kind in ['wsgi', 'shell']:
