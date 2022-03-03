@@ -651,13 +651,14 @@ def setup_node_runtime(app, deltas={}):
         first_time = True
 
     env = {
+        'RUNTIME_VERSION': config.get("RUNTIME_VERSION"),
         'VIRTUAL_ENV': virtualenv_path,
         'NODE_PATH': node_path,
         'NPM_CONFIG_PREFIX': npm_prefix,
         "PATH": ':'.join([join(virtualenv_path, "bin"), join(node_path, ".bin"), environ['PATH']])
     }
 
-    version = config.get("RUNTIME_VERSION")
+    version = env.get("RUNTIME_VERSION")
     print("NODE RUNTIME VERSION", version)
     if version:
         node_binary = join(virtualenv_path, "bin", "node")
