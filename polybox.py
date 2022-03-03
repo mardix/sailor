@@ -686,6 +686,8 @@ def setup_node_runtimeX(app, deltas={}):
 def setup_node_runtime(app, deltas={}):
     """Deploy a Node  application"""
 
+    config = get_app_config(app)
+    
     virtualenv_path = join(ENV_ROOT, app)
     node_path = join(ENV_ROOT, app, "node_modules")
     nvmrc_env_path = join(ENV_ROOT, app, ".nvmrc")
@@ -709,8 +711,8 @@ def setup_node_runtime(app, deltas={}):
         "PATH": ':'.join([join(virtualenv_path, "bin"), join(node_path, ".bin"), environ['PATH']])
     }
 
-    version = env.get("RUNTIME_VERSION")
-    
+    version = config.get("RUNTIME_VERSION")
+
     # Add .nvmrc
     if not exists(nvmrc_app_path):
         if exists(nvmrc_env_path):
