@@ -445,6 +445,7 @@ TODO
 
 - 1.3.0
   - Added process option `enabled` to run/not-run a process. Especially if you don't want to run a process without removing the code.
+  - Fixed undefined value in setup_node_runtime
 
 - 1.2.0
   - Added revision hash info and deploy time. 
