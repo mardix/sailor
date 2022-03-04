@@ -1,11 +1,11 @@
 
-# :+:POLYBOX:+:
+# :+:Miko:+:
 
 <img src="./cardib.jpg" style="width: 350px; height: auto;">
 
 ---
 
-## An *itty-bitty* PaaS that uses `git push` to deploy  micro-services and websites on your own servers, like `Okurrr!!!`
+## A micro-app container that uses `git push` to deploy micro-apps and sites on your own servers similar to Heroku. `Okurrrr!`
 
 ---
 
@@ -17,7 +17,7 @@
 - Deploy multiple apps from a single repository
 - Runs long running apps
 - Runs workers/background applications
-- Easy configuration with polybox.yml manifest
+- Easy configuration with miko.yml manifest
 - Easy command line setup
 - Cron-like/Scheduled script executions
 - App management: `deploy, reload, stop, remove, scale, log, info` etc
@@ -44,28 +44,28 @@
 - Ubuntu 20.04
 
 
-#### 2. Install Polybox on the server
+#### 2. Install Miko on the server
 
-On the server, run the code below to setup the environment for Polybox and install all its dependencies. A new user, **`polybox`**, will be created and will be used to interact with SSH for Polybox.
+On the server, run the code below to setup the environment for Miko and install all its dependencies. A new user, **`miko`**, will be created and will be used to interact with SSH for Miko.
 
 ```sh
-curl https://raw.githubusercontent.com/mardix/polybox/master/install.sh > install.sh
+curl https://raw.githubusercontent.com/mardix/miko/master/install.sh > install.sh
 chmod 755 install.sh
 ./install.sh
 ```
 
 #### 3. Setup  Git on local repo
 
-On your local machine, point a Git remote to your Polybox server (set in step 2), with **`polybox`** as username.
+On your local machine, point a Git remote to your Miko server (set in step 2), with **`miko`** as username.
 
-Format: `git remote add polybox polybox@$host:$app_name`
+Format: `git remote add miko miko@$host:$app_name`
 
 With:
 
 - `$host` The server name or IP address 
-- `$app_name` The name of the application, that is set in the `polybox.yml` (the manifest to deploy)
+- `$app_name` The name of the application, that is set in the `miko.yml` (the manifest to deploy)
 
-Example: `git remote add polybox polybox@my-server-host.com:myappname.com`
+Example: `git remote add miko miko@my-server-host.com:myappname.com`
 
 ---
 
@@ -76,16 +76,16 @@ Example: `git remote add polybox polybox@my-server-host.com:myappname.com`
 ...go into your repo and do what you do best, *okurrr!* :) 
 
 
-##### 2. Edit Polybox.yml
+##### 2. Edit Miko.yml
 
-At the root of your app directory, create  `polybox.yml` (required).
+At the root of your app directory, create  `miko.yml` (required).
 
 ```
-# polybox.yml
+# miko.yml
 
 ---
 apps:
-    # ->  with remote: polybox@$host:myapp.com
+    # ->  with remote: miko@$host:myapp.com
   - name: myapp.com
     runtime: python
     process:
@@ -103,11 +103,11 @@ apps:
 
 ##### 3. Add Git Remote
 
-Example: `git remote add polybox polybox@$host:myapp.com`
+Example: `git remote add miko miko@$host:myapp.com`
 
 ##### 4. Deploy
 
-Push your code: ` git push polybox master`
+Push your code: ` git push miko master`
 
 ##### 5. Profit!
 
@@ -115,51 +115,51 @@ We did it, *Okurrr!*
 
 ---
 
-### + Polybox Commands
+### + Miko Commands
 
-Polybox communicates with your server via SSH, with the user name: **`polybox`**
+Miko communicates with your server via SSH, with the user name: **`miko`**
 
 You must already already have SSH access to the machine for it to work.
 
-ie: `ssh polybox@$host`
+ie: `ssh miko@$host`
 
 
 ##### List all commands
 
 ```
-ssh polybox@$host
+ssh miko@$host
 ```
 
 
 ##### List all apps: `apps`
 
 ```
-ssh polybox@$host apps
+ssh miko@$host apps
 ```
 
 The command above will show the minimal info. To expand:
 
 ```
-ssh polybox@$host apps x
+ssh miko@$host apps x
 ```
 
 ##### Deploy app: `deploy $app_name`
 
 
 ```
-ssh polybox@$host deploy $app_name
+ssh miko@$host deploy $app_name
 ```
 
 ##### Reload app: `reload $app_name`
 
 ```
-ssh polybox@$host reload $app_name
+ssh miko@$host reload $app_name
 ```
 
 ##### Stop app: `stop $app_name`
 
 ```
-ssh polybox@$host stop $app_name
+ssh miko@$host stop $app_name
 ```
 
 ##### Remove app: `remove $app_name`
@@ -167,20 +167,20 @@ ssh polybox@$host stop $app_name
 To completely remove the application
 
 ```
-ssh polybox@$host remove $app_name
+ssh miko@$host remove $app_name
 ```
 
 
 ##### Show app info: `info $app_name`
 
 ```
-ssh polybox@$host info $app_name
+ssh miko@$host info $app_name
 ```
 
 ##### Show app log: `log $app_name`
 
 ```
-ssh polybox@$host log $app_name
+ssh miko@$host log $app_name
 ```
 
 
@@ -189,7 +189,7 @@ ssh polybox@$host log $app_name
 To re-issue the SSL
 
 ```
-ssh polybox@$host reset-ssl $app_name
+ssh miko@$host reset-ssl $app_name
 ```
 
 
@@ -199,26 +199,26 @@ ssh polybox@$host reset-ssl $app_name
 To increase/decrease the total workers for this process
 
 ```
-ssh polybox@$host scale $app_name $proc=$count $proc2=$count2
+ssh miko@$host scale $app_name $proc=$count $proc2=$count2
 ```
 
 Example: 
 
 ```
-ssh polybox@$host scale site.com web=4
+ssh miko@$host scale site.com web=4
 ```
 
 ##### Reload all apps: `apps:reload-all`
 
 
 ```
-ssh polybox@$host apps:reload-all
+ssh miko@$host apps:reload-all
 ```
 
 ##### Stop all apps: `apps:stop-all`
 
 ```
-ssh polybox@$host apps:stop-all
+ssh miko@$host apps:stop-all
 ```
 
 #### -- Misc --
@@ -227,30 +227,30 @@ ssh polybox@$host apps:stop-all
 ##### Show the version: `system:version`
 
 ```
-ssh polybox@$host system:version
+ssh miko@$host system:version
 ```
 
 ##### Update the system `system:update`
 
-To update Polybox to the latest from Github
+To update Miko to the latest from Github
 
 ```
-ssh polybox@$host system:update
+ssh miko@$host system:update
 ```
 
 Additionally, you can update from a specific branch, usually for testing purposes
 
 ```
-ssh polybox@$host system:update $branch-name
+ssh miko@$host system:update $branch-name
 ```
 
 ---
 
 ## About
 
-**Polybox** is a utility to install on a host machine, that allows you to deploy multiple apps, micro-services, webites, run scripts and background workers on a single VPS (Digital Ocean, Linode, Hetzner).
+**Miko** is a utility to install on a host machine, that allows you to deploy multiple apps, micro-services, webites, run scripts and background workers on a single VPS (Digital Ocean, Linode, Hetzner).
 
-**Polybox** follows a process similar to Heroku or Dokku where you Git push code to the host and **Polybox** will:
+**Miko** follows a process similar to Heroku or Dokku where you Git push code to the host and **Miko** will:
 
 - create an instance on the host machine
 - deploy the new code
@@ -261,7 +261,7 @@ ssh polybox@$host system:update $branch-name
 - monitor the application
 - restart the application if it crashes
 
-**Polybox** supports deployment for:
+**Miko** supports deployment for:
 
 - Python (Flask/Django)
 - Nodejs (Express)
@@ -271,11 +271,11 @@ ssh polybox@$host system:update $branch-name
 
 ---
 
-### Why Polybox?
+### Why Miko?
 
-Polybox is a simpler alternative to Docker containers or Dokku. It mainly deals with your application deployment, similar to Heroku. 
+Miko is a simpler alternative to Docker containers or Dokku. It mainly deals with your application deployment, similar to Heroku. 
 
-Polybox takes away all the complexity of Docker Containers or Dokku and gives you something simpler to deploy your applications, similar to Heroku, along with SSL.
+Miko takes away all the complexity of Docker Containers or Dokku and gives you something simpler to deploy your applications, similar to Heroku, along with SSL.
 
 
 ---
@@ -290,38 +290,38 @@ Polybox takes away all the complexity of Docker Containers or Dokku and gives yo
 
 ---
 
-## Using `Polybox`
+## Using `Miko`
 
-**Polybox** supports a Heroku-like workflow, like so:
+**Miko** supports a Heroku-like workflow, like so:
 
-* Create a `git` SSH remote pointing to your **Polybox** server with the app name as repo name.
-  `git remote add polybox polybox@yourserver:appname`.
-* Push your code: `git push polybox master`.
-* **Polybox** determines the runtime and installs the dependencies for your app (building whatever's required).
+* Create a `git` SSH remote pointing to your **Miko** server with the app name as repo name.
+  `git remote add miko miko@yourserver:appname`.
+* Push your code: `git push miko master`.
+* **Miko** determines the runtime and installs the dependencies for your app (building whatever's required).
    * For Python, it installs and segregates each app's dependencies from `requirements.txt` into a `virtualenv`.
    * For Node, it installs whatever is in `package.json` into `node_modules`.
-* It then looks at `polybox.yml` and starts the relevant applications using a generic process manager.
+* It then looks at `miko.yml` and starts the relevant applications using a generic process manager.
 * You can optionally also specify a `release` worker which is run once when the app is deployed.
 * A `static` worker type, with the root path as the argument, can be used to deploy a gh-pages style static site.
 
 ---
 
-## polybox.yml
+## miko.yml
 
 
-`polybox.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
+`miko.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
 
 
-`polybox.yml` contains an array of all apps to be deploy, and they are identified by `name`.
+`miko.yml` contains an array of all apps to be deploy, and they are identified by `name`.
 
-When setting up the remote, the `name` must match the `name` in the polybox.yml
+When setting up the remote, the `name` must match the `name` in the miko.yml
 
 
 ```yml
 
-# ~ Polybox ~
-# polybox.yml
-# Polybox Configuration (https://mardix.github.io/polybox)
+# ~ Miko ~
+# miko.yml
+# Miko Configuration (https://mardix.github.io/miko)
 #
 ---
 
@@ -444,6 +444,7 @@ TODO
 ## CHANGELOG
 
 - 1.3.0
+  - Rebranding **Miko**
   - Added process option `enabled` to run/not-run a process. Especially if you don't want to run a process without removing the code.
   - Fixed undefined value in setup_node_runtime
 
@@ -480,7 +481,7 @@ TODO
   - fixed letsencrypt issue
 
 - 1.0.0
-  - Rebranding Boxie to Polybox with Cardi B image, Okrrrrrr! (joke, joke)
+  - Rebranding Boxie to Miko with Cardi B image, Okrrrrrr! (joke, joke)
   - Remove Python 2 support.
   - Recommend Ubuntu 20.04.
   - Added separate install process for Ubuntu 2018.04
@@ -490,10 +491,10 @@ TODO
 
 - 0.1.0
   - Initial
-  - polybox.yml contains the application configuration
+  - miko.yml contains the application configuration
   - 'app.run.web' is set for static/web/wsgi command. Static accepts one path
   - added 'cli.upgrade' to upgrade to the latest version
-  - 'polybox.json' can now have scripts to run 
+  - 'miko.json' can now have scripts to run 
   - 'uwsgi' and 'nginx' are hidden, 'app.env' can contain basic key
   - 'app.static_paths' is an array
   - Fixed python virtualenv setup, if the repo was used for a different runtime
@@ -519,7 +520,7 @@ TODO
 - [Piku](https://github.com/piku/piku)
 - [Caprover](https://github.com/CapRover/CapRover)
 
-Credit: Polybox is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you.
+Credit: Miko is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you.
 
 ---
 
