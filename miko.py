@@ -692,6 +692,7 @@ def setup_python_runtime(app, deltas={}):
     requirements = join(APP_ROOT, app, 'requirements.txt')
     activation_script = join(virtualenv_path, 'bin', 'activate_this.py')
     config = get_app_config(app)
+    version = int(config.get("RUNTIME_VERSION", "3"))
 
     first_time = False
     if not exists(activation_script):
