@@ -668,7 +668,7 @@ def setup_node_runtime(app, deltas={}):
         if not installed.endswith(version):
             started = glob(join(UWSGI_ENABLED, '{}*.ini'.format(app)))
             if installed and len(started):
-                echo("Warning: Can't update node with app running. Stop the app & retry.", fg='yellow')
+                echo("Warning: Can't update node with app running. Stop the app & retry.")
             else:
                 echo("......-> Installing node version '{RUNTIME_VERSION:s}' using nodeenv".format(**env))
                 call("nodeenv --prebuilt --node={RUNTIME_VERSION:s} --clean-src --force {VIRTUAL_ENV:s}".format(
@@ -928,7 +928,7 @@ def spawn_app(app, deltas={}):
         for w in v:
             enabled = join(UWSGI_ENABLED, '{app:s}___{k:s}.{w:d}.ini'.format(**locals()))
             if exists(enabled):
-                echo("......-> terminating '{app:s}:{k:s}.{w:d}'".format(**locals()), fg='yellow')
+                echo("......-> terminating '{app:s}:{k:s}.{w:d}'".format(**locals()))
                 unlink(enabled)
 
     return env
@@ -979,35 +979,38 @@ def spawn_worker(app, kind, command, env, ordinal=1):
         ('logfile-chmod','640')
     ]
 
-    http = '{BIND_ADDRESS:s}:{PORT:s}'.format(**env)
-
     # only add virtualenv to uwsgi if it's a real virtualenv
     if exists(join(env_path, "bin", "activate_this.py")):
         settings.append(('virtualenv', env_path))
 
-    # for Python only
+    # wsgi -> web for python
     if app_kind == 'wsgi':
+        http = '{BIND_ADDRESS:s}:{PORT:s}'.format(**env)
         settings.extend([('module', command), ('threads', env.get('UWSGI_THREADS', '4'))])
         settings.extend([('plugin', 'python3'), ])
         if 'UWSGI_ASYNCIO' in env:
             settings.extend([('plugin', 'asyncio_python3'), ])
 
-        echo("......-> nginx will talk to uWSGI via %s" % http, fg='yellow')
+        echo("......-> nginx will talk to uWSGI via %s" % http)
         settings.extend([('http', http), ('http-socket', http)])
 
-    elif app_kind == 'cron':
-        settings.extend([['cron', command.replace("*/", "-").replace("*", "-1")]])
-        echo("......-> uwsgi scheduled cron for {command}".format(**locals()), fg='yellow')
-        
-    # shell
+    # wshell / for other web
     elif app_kind == 'shell':
-        echo("......-> nginx will talk to the web process via %s" % http, fg='yellow')
+        http = '{BIND_ADDRESS:s}:{PORT:s}'.format(**env)
+        echo("......-> nginx will talk to the web process via %s" % http)
         settings.append(('attach-daemon', command))
 
-    elif app_kind == 'static':
-        echo("......-> nginx will serve static HTML/PHP files only".format(**env), fg='yellow')
+    # cron
+    elif app_kind == 'cron':
+        settings.extend([['cron', command.replace("*/", "-").replace("*", "-1")]])
+        echo("......-> uwsgi scheduled cron for {command}".format(**locals()))
         
-    else:      
+    # static site
+    elif app_kind == 'static':
+        echo("......-> nginx will serve static HTML/PHP files only".format(**env))
+        
+    else:   
+        echo("......-> attaching a demon")   
         settings.append(('attach-daemon', command))
 
     if app_kind in ['wsgi', 'shell']:
@@ -1252,7 +1255,7 @@ def _reload_app(app):
     remove_nginx_conf(app)
     write_deployinfo(app, {"deployed": utcnow(), "stopped": 0}) 
     cleanup_uwsgi_enabled_ini(app)
-    echo("......-> reloading '{}'...".format(app), fg='yellow')
+    echo("......-> reloading '{}'...".format(app))
     spawn_app(app)
 
 
@@ -1359,7 +1362,7 @@ def cmd_reload(app):
     if exists(acme_certs):
         rmtree(acme_certs)
         unlink(acme_link)    
-    echo("......-> reloading '{}'...".format(app), fg='yellow')
+    echo("......-> reloading '{}'...".format(app))
     spawn_app(app)
 
 
@@ -1373,7 +1376,7 @@ def cmd_stop(app):
     remove_nginx_conf(app)
     cleanup_uwsgi_enabled_ini(app)
     write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
-    echo("......-> '%s' stopped" % app, fg='yellow')
+    echo("......-> '%s' stopped" % app)
 
 @cli.command("apps:stop-all")
 def cmd_stop_all():
@@ -1385,7 +1388,7 @@ def cmd_stop_all():
             remove_nginx_conf(app)
             cleanup_uwsgi_enabled_ini(app)
             write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
-            echo("......-> '%s' stopped" % app, fg='yellow')
+            echo("......-> '%s' stopped" % app)
 
 
 @cli.command("system:version")
@@ -1469,7 +1472,7 @@ def cmd_init():
 
     # mark this script as executable (in case we were invoked via interpreter)
     if not(stat(BOX_SCRIPT).st_mode & S_IXUSR):
-        echo("Setting '{}' as executable.".format(BOX_SCRIPT), fg='yellow')
+        echo("Setting '{}' as executable.".format(BOX_SCRIPT))
         chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
 
     # ACME
