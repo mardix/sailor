@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Miko"
-VERSION = "1.3.0" 
+VERSION = "1.3.1" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -1404,9 +1404,14 @@ def cmd_update(branch="master"):
     print_title("Updating Miko...")
     url = "https://raw.githubusercontent.com/mardix/miko/%s/miko.py" % branch
     echo("...downloading: 'miko.py' - on branch: %s " % branch)
-    unlink(BOX_SCRIPT)
-    urllib.request.urlretrieve(url, BOX_SCRIPT)
-    chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
+    with NamedTemporaryFile(mode="w") as f:
+        with urllib.request.urlopen(url) as f2:
+            f.write(f2.read().decode('utf-8')) 
+        if exists(f.name):
+            if exists(BOX_SCRIPT):
+                unlink(BOX_SCRIPT)
+            copyfile(f.name, BOX_SCRIPT)
+            chmod(BOX_SCRIPT, stat(BOX_SCRIPT).st_mode | S_IXUSR)
     echo("...update completed!", fg="green")
 
 
