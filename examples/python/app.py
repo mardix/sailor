@@ -4,4 +4,4 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    return "Hello Polybox, from Python/Flask!"
+    return "Hello Sailor, from Python/Flask!"

@@ -1,4 +1,4 @@
-# Polybox
+# Sailor
 
 This is a **static html/php** example
 
@@ -7,13 +7,13 @@ This is a **static html/php** example
 ## Set up GIT remote
 
 ```
-git remote add polybox polybox@YOUR-HOST:static-example
+git remote add sailor sailor@YOUR-HOST:static-example
 ```
 
 ## GIT Push
 
 ```
-git push polybox master
+git push sailor master
 ```
 
 ---

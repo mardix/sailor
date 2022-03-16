@@ -1,6 +1,6 @@
-# Polybox
+# Sailor
 
-This is an example of a mono repo, where Polybox can deploy multiple apps from the same repo
+This is an example of a mono repo, where Sailor can deploy multiple apps from the same repo
 
 It uses Express/Node, Flask/Python to build both app.
 
@@ -12,19 +12,19 @@ Also, it uses cron to execute periodically
 
 ```
 # Setup the node remote
-git remote add polybox-node polybox@YOUR-HOST:node-app
+git remote add sailor-node sailor@YOUR-HOST:node-app
 
 # Setup the Python remote
-git remote add polybox-py polybox@YOUR-HOST:python-app
+git remote add sailor-py sailor@YOUR-HOST:python-app
 
 ```
 
 ## GIT Push to deploy
 
 ```
-git push polybox-node master
+git push sailor-node master
 
-git push polybox-py master
+git push sailor-py master
 ```
 
 ---
