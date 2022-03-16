@@ -1,11 +1,11 @@
 
-# :+:Miko:+:
+# :+: Sailor :+:
 
-<img src="./cardib.jpg" style="width: 350px; height: auto;">
+<img src="./sailor.jpeg" style="width: 700px; height: auto;">
 
 ---
-
-## A micro-app container that uses `git push` to deploy micro-apps and sites on your own servers similar to Heroku. `Okurrrr!`
+ 
+## A micro-app container that uses `git push` to deploy micro-apps and sites on your own servers similar to Heroku. Ship your apps it like a *Sailor*!
 
 ---
 
@@ -17,7 +17,7 @@
 - Deploy multiple apps from a single repository
 - Runs long running apps
 - Runs workers/background applications
-- Easy configuration with miko.yml manifest
+- Easy configuration with sailor.yml manifest
 - Easy command line setup
 - Cron-like/Scheduled script executions
 - App management: `deploy, reload, stop, remove, scale, log, info` etc
@@ -44,28 +44,28 @@
 - Ubuntu 20.04
 
 
-#### 2. Install Miko on the server
+#### 2. Install Sailor on the server
 
-On the server, run the code below to setup the environment for Miko and install all its dependencies. A new user, **`miko`**, will be created and will be used to interact with SSH for Miko.
+On the server, run the code below to setup the environment for Sailor and install all its dependencies. A new user, **`sailor`**, will be created and will be used to interact with SSH for Sailor.
 
 ```sh
-curl https://raw.githubusercontent.com/mardix/miko/master/install.sh > install.sh
+curl https://raw.githubusercontent.com/mardix/sailor/master/install.sh > install.sh
 chmod 755 install.sh
 ./install.sh
 ```
 
 #### 3. Setup  Git on local repo
 
-On your local machine, point a Git remote to your Miko server (set in step 2), with **`miko`** as username.
+On your local machine, point a Git remote to your Sailor server (set in step 2), with **`sailor`** as username.
 
-Format: `git remote add miko miko@$host:$app_name`
+Format: `git remote add sailor sailor@$host:$app_name`
 
 With:
 
 - `$host` The server name or IP address 
-- `$app_name` The name of the application, that is set in the `miko.yml` (the manifest to deploy)
+- `$app_name` The name of the application, that is set in the `sailor.yml` (the manifest to deploy)
 
-Example: `git remote add miko miko@my-server-host.com:myappname.com`
+Example: `git remote add sailor sailor@my-server-host.com:myappname.com`
 
 ---
 
@@ -73,19 +73,19 @@ Example: `git remote add miko miko@my-server-host.com:myappname.com`
 
 ##### 1. Work on your app...
 
-...go into your repo and do what you do best, *okurrr!* :) 
+...go into your repo and do what you do best, like a *sailor*!
 
 
-##### 2. Edit Miko.yml
+##### 2. Edit Sailor.yml
 
-At the root of your app directory, create  `miko.yml` (required).
+At the root of your app directory, create  `sailor.yml` (required).
 
 ```
-# miko.yml
+# sailor.yml
 
 ---
 apps:
-    # ->  with remote: miko@$host:myapp.com
+    # ->  with remote: sailor@$host:myapp.com
   - name: myapp.com
     runtime: python
     process:
@@ -103,11 +103,11 @@ apps:
 
 ##### 3. Add Git Remote
 
-Example: `git remote add miko miko@$host:myapp.com`
+Example: `git remote add sailor sailor@$host:myapp.com`
 
 ##### 4. Deploy
 
-Push your code: ` git push miko master`
+Push your code: ` git push sailor master`
 
 ##### 5. Profit!
 
@@ -115,51 +115,51 @@ We did it, *Okurrr!*
 
 ---
 
-### + Miko Commands
+### + Sailor Commands
 
-Miko communicates with your server via SSH, with the user name: **`miko`**
+Sailor communicates with your server via SSH, with the user name: **`sailor`**
 
 You must already already have SSH access to the machine for it to work.
 
-ie: `ssh miko@$host`
+ie: `ssh sailor@$host`
 
 
 ##### List all commands
 
 ```
-ssh miko@$host
+ssh sailor@$host
 ```
 
 
 ##### List all apps: `apps`
 
 ```
-ssh miko@$host apps
+ssh sailor@$host apps
 ```
 
 The command above will show the minimal info. To expand:
 
 ```
-ssh miko@$host apps x
+ssh sailor@$host apps x
 ```
 
 ##### Deploy app: `deploy $app_name`
 
 
 ```
-ssh miko@$host deploy $app_name
+ssh sailor@$host deploy $app_name
 ```
 
 ##### Reload app: `reload $app_name`
 
 ```
-ssh miko@$host reload $app_name
+ssh sailor@$host reload $app_name
 ```
 
 ##### Stop app: `stop $app_name`
 
 ```
-ssh miko@$host stop $app_name
+ssh sailor@$host stop $app_name
 ```
 
 ##### Remove app: `remove $app_name`
@@ -167,20 +167,20 @@ ssh miko@$host stop $app_name
 To completely remove the application
 
 ```
-ssh miko@$host remove $app_name
+ssh sailor@$host remove $app_name
 ```
 
 
 ##### Show app info: `info $app_name`
 
 ```
-ssh miko@$host info $app_name
+ssh sailor@$host info $app_name
 ```
 
 ##### Show app log: `log $app_name`
 
 ```
-ssh miko@$host log $app_name
+ssh sailor@$host log $app_name
 ```
 
 
@@ -189,7 +189,7 @@ ssh miko@$host log $app_name
 To re-issue the SSL
 
 ```
-ssh miko@$host reset-ssl $app_name
+ssh sailor@$host reset-ssl $app_name
 ```
 
 
@@ -199,26 +199,26 @@ ssh miko@$host reset-ssl $app_name
 To increase/decrease the total workers for this process
 
 ```
-ssh miko@$host scale $app_name $proc=$count $proc2=$count2
+ssh sailor@$host scale $app_name $proc=$count $proc2=$count2
 ```
 
 Example: 
 
 ```
-ssh miko@$host scale site.com web=4
+ssh sailor@$host scale site.com web=4
 ```
 
 ##### Reload all apps: `apps:reload-all`
 
 
 ```
-ssh miko@$host apps:reload-all
+ssh sailor@$host apps:reload-all
 ```
 
 ##### Stop all apps: `apps:stop-all`
 
 ```
-ssh miko@$host apps:stop-all
+ssh sailor@$host apps:stop-all
 ```
 
 #### -- Misc --
@@ -227,30 +227,30 @@ ssh miko@$host apps:stop-all
 ##### Show the version: `system:version`
 
 ```
-ssh miko@$host system:version
+ssh sailor@$host system:version
 ```
 
 ##### Update the system `system:update`
 
-To update Miko to the latest from Github
+To update Sailor to the latest from Github
 
 ```
-ssh miko@$host system:update
+ssh sailor@$host system:update
 ```
 
 Additionally, you can update from a specific branch, usually for testing purposes
 
 ```
-ssh miko@$host system:update $branch-name
+ssh sailor@$host system:update $branch-name
 ```
 
 ---
 
 ## About
 
-**Miko** is a utility to install on a host machine, that allows you to deploy multiple apps, micro-services, webites, run scripts and background workers on a single VPS (Digital Ocean, Linode, Hetzner).
+**Sailor** is a utility to install on a host machine, that allows you to deploy multiple apps, micro-services, webites, run scripts and background workers on a single VPS (Digital Ocean, Linode, Hetzner).
 
-**Miko** follows a process similar to Heroku or Dokku where you Git push code to the host and **Miko** will:
+**Sailor** follows a process similar to Heroku or Dokku where you Git push code to the host and **Sailor** will:
 
 - create an instance on the host machine
 - deploy the new code
@@ -261,7 +261,7 @@ ssh miko@$host system:update $branch-name
 - monitor the application
 - restart the application if it crashes
 
-**Miko** supports deployment for:
+**Sailor** supports deployment for:
 
 - Python (Flask/Django)
 - Nodejs (Express)
@@ -271,11 +271,11 @@ ssh miko@$host system:update $branch-name
 
 ---
 
-### Why Miko?
+### Why Sailor?
 
-Miko is a simpler alternative to Docker containers or Dokku. It mainly deals with your application deployment, similar to Heroku. 
+Sailor is a simpler alternative to Docker containers or Dokku. It mainly deals with your application deployment, similar to Heroku. 
 
-Miko takes away all the complexity of Docker Containers or Dokku and gives you something simpler to deploy your applications, similar to Heroku, along with SSL.
+Sailor takes away all the complexity of Docker Containers or Dokku and gives you something simpler to deploy your applications, similar to Heroku, along with SSL.
 
 
 ---
@@ -290,38 +290,38 @@ Miko takes away all the complexity of Docker Containers or Dokku and gives you s
 
 ---
 
-## Using `Miko`
+## Using `Sailor`
 
-**Miko** supports a Heroku-like workflow, like so:
+**Sailor** supports a Heroku-like workflow, like so:
 
-* Create a `git` SSH remote pointing to your **Miko** server with the app name as repo name.
-  `git remote add miko miko@yourserver:appname`.
-* Push your code: `git push miko master`.
-* **Miko** determines the runtime and installs the dependencies for your app (building whatever's required).
+* Create a `git` SSH remote pointing to your **Sailor** server with the app name as repo name.
+  `git remote add sailor sailor@yourserver:appname`.
+* Push your code: `git push sailor master`.
+* **Sailor** determines the runtime and installs the dependencies for your app (building whatever's required).
    * For Python, it installs and segregates each app's dependencies from `requirements.txt` into a `virtualenv`.
    * For Node, it installs whatever is in `package.json` into `node_modules`.
-* It then looks at `miko.yml` and starts the relevant applications using a generic process manager.
+* It then looks at `sailor.yml` and starts the relevant applications using a generic process manager.
 * You can optionally also specify a `release` worker which is run once when the app is deployed.
 * A `static` worker type, with the root path as the argument, can be used to deploy a gh-pages style static site.
 
 ---
 
-## miko.yml
+## sailor.yml
 
 
-`miko.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
+`sailor.yml` is a manifest format for describing apps. It declares environment variables, scripts, and other information required to run an app on your server. This document describes the schema in detail.
 
 
-`miko.yml` contains an array of all apps to be deploy, and they are identified by `name`.
+`sailor.yml` contains an array of all apps to be deploy, and they are identified by `name`.
 
-When setting up the remote, the `name` must match the `name` in the miko.yml
+When setting up the remote, the `name` must match the `name` in the sailor.yml
 
 
 ```yml
 
-# ~ Miko ~
-# miko.yml
-# Miko Configuration (https://mardix.github.io/miko)
+# ~ Sailor ~
+# sailor.yml
+# Sailor Configuration (https://mardix.github.io/sailor)
 #
 ---
 
@@ -443,16 +443,16 @@ TODO
 
 ## CHANGELOG
 
-- 1.3.0
-  - Rebranding **Miko**
+- 0.10.0
+  - Rebranding **Sailor**
   - Added process option `enabled` to run/not-run a process. Especially if you don't want to run a process without removing the code.
   - Fixed undefined value in setup_node_runtime
 
-- 1.2.0
+- 0.5.0
   - Added revision hash info and deploy time. 
   - Log deploy info 
   
-- 1.1.0
+- 0.4.0
   - added new proctype 'cron' To help execute cron. `cron` workers, which require a simplified `cron` expression preceding the command to be run (e.g. `cron: * * * * * python batch.py` to run a batch every minyte
   ```
   proces:
@@ -477,11 +477,11 @@ TODO
   - allow to system:update to be able to update from a different branch `system:update 1.2.0`
 
 
-- 1.0.1
+- 0.3.1
   - fixed letsencrypt issue
 
-- 1.0.0
-  - Rebranding Boxie to Miko with Cardi B image, Okrrrrrr! (joke, joke)
+- 0.2.0
+  - Rebranding Boxie to Sailor with Cardi B image, Okrrrrrr! (joke, joke)
   - Remove Python 2 support.
   - Recommend Ubuntu 20.04.
   - Added separate install process for Ubuntu 2018.04
@@ -491,10 +491,10 @@ TODO
 
 - 0.1.0
   - Initial
-  - miko.yml contains the application configuration
+  - sailor.yml contains the application configuration
   - 'app.run.web' is set for static/web/wsgi command. Static accepts one path
   - added 'cli.upgrade' to upgrade to the latest version
-  - 'miko.json' can now have scripts to run 
+  - 'sailor.json' can now have scripts to run 
   - 'uwsgi' and 'nginx' are hidden, 'app.env' can contain basic key
   - 'app.static_paths' is an array
   - Fixed python virtualenv setup, if the repo was used for a different runtime
@@ -520,7 +520,7 @@ TODO
 - [Piku](https://github.com/piku/piku)
 - [Caprover](https://github.com/CapRover/CapRover)
 
-Credit: Miko is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you.
+Credit: Sailor is a fork of **Piku** https://github.com/piku/piku. Great work and Thank you.
 
 ---
 

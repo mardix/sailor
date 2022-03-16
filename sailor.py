@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Miko: A tool to deploy mutiple sites or apps on a single server
+Sailor: A tool to deploy mutiple sites or apps on a single server
 """
 
 try:
     from sys import version_info
     assert version_info >= (3, 6)
 except AssertionError:
-    exit("Miko requires Python >= 3.6")
+    exit("Sailor requires Python >= 3.6")
 
 import sys
 import click
@@ -41,7 +41,7 @@ from grp import getgrgid
 
 # -----------------------------------------------------------------------------
 
-NAME = "Miko"
+NAME = "Sailor"
 VERSION = "1.3.1" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
@@ -50,7 +50,7 @@ BOX_SCRIPT = realpath(__file__)
 BOX_ROOT = environ.get('BOX_ROOT', environ['HOME'])
 BOX_BIN = join(environ['HOME'], 'bin')
 APP_ROOT = abspath(join(BOX_ROOT, "apps"))
-DOT_ROOT = abspath(join(BOX_ROOT, ".miko"))
+DOT_ROOT = abspath(join(BOX_ROOT, ".sailor"))
 ENV_ROOT = abspath(join(DOT_ROOT, "envs"))
 GIT_ROOT = abspath(join(DOT_ROOT, "repos"))
 LOG_ROOT = abspath(join(DOT_ROOT, "logs"))
@@ -229,7 +229,7 @@ def utcnow():
   
 def print_title(title=None, app=None):
     print("-" * 80)
-    print("Miko v%s" % VERSION)
+    print("Sailor v%s" % VERSION)
     if app:
         print("App: %s" % app)
     if title:
@@ -363,15 +363,15 @@ def parse_settings(filename, env={}):
     return env
 
 def get_config(app):
-    """ Return the info from miko.yml """
-    config_file = join(APP_ROOT, app, "miko.yml")
+    """ Return the info from sailor.yml """
+    config_file = join(APP_ROOT, app, "sailor.yml")
 
     with open(config_file) as f:
         config = yaml.safe_load(f)["apps"]
         for c in config:
             if app == c["name"]:
                 return c
-        _error("App '%s' is missing or didn't match any app 'name' in miko.yml." % app)
+        _error("App '%s' is missing or didn't match any app 'name' in sailor.yml." % app)
 
 def get_app_processes(app):
     """ Returns the applications to run """
@@ -568,10 +568,10 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
         workers = parse_app_processes(app)
     
         if not config:
-            _error("Invalid miko.yml for app '%s'." % app)
+            _error("Invalid sailor.yml for app '%s'." % app)
 
         elif not workers:
-            _error("Invalid miko.yml - missing 'processes'")
+            _error("Invalid sailor.yml - missing 'processes'")
         else:
             # ensure path exist
             for p in ensure_paths:
@@ -625,7 +625,7 @@ def deploy_app(app, deltas={}, newrev=None, release=False):
 
 def get_spawn_env(app):
     env = {}
-    # base config from miko.yml
+    # base config from sailor.yml
     env.update(get_app_config(app))
     # Load environment variables shipped with repo (if any)
     env.update(get_app_env(app))
@@ -1217,9 +1217,9 @@ def cli():
     """
 ---------------------------------------------
 
-:+:Miko:+:
+:+:Sailor:+:
 
-https://github.com/mardix/miko/ 
+https://github.com/mardix/sailor/ 
 
 ---------------------------------------------
     """
@@ -1400,10 +1400,10 @@ def cmd_version():
 @cli.command("system:update")
 @click.argument('branch',required=False)
 def cmd_update(branch="master"):
-    """ Update Miko to the latest from Github. x:update $branch """
-    print_title("Updating Miko...")
-    url = "https://raw.githubusercontent.com/mardix/miko/%s/miko.py" % branch
-    echo("...downloading: 'miko.py' - on branch: %s " % branch)
+    """ Update Sailor to the latest from Github. x:update $branch """
+    print_title("Updating Sailor...")
+    url = "https://raw.githubusercontent.com/mardix/sailor/%s/sailor.py" % branch
+    echo("...downloading: 'sailor.py' - on branch: %s " % branch)
     with NamedTemporaryFile(mode="w") as f:
         with urllib.request.urlopen(url) as f2:
             f.write(f2.read().decode('utf-8')) 
@@ -1444,7 +1444,7 @@ def cmd_setup_ssh(public_key_file):
 
 
 def cmd_init():
-    """Initialize Miko for 1st time"""
+    """Initialize Sailor for 1st time"""
 
     print_title()
     echo("......-> running in Python {}".format(".".join(map(str, version_info))))

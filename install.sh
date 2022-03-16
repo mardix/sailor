@@ -1,5 +1,5 @@
 
-echo "Miko installer"
+echo "Sailor installer"
 
 apt-get update
 apt-get install -y bc wget \
@@ -33,28 +33,28 @@ apt-get install -y bc wget \
    nodeenv
 apt-get update
 
-PAAS_USERNAME=miko
+PAAS_USERNAME=sailor
 
 # Create user
 sudo adduser --disabled-password --gecos 'PaaS access' --ingroup www-data $PAAS_USERNAME
 
 # copy your public key to /tmp (assuming it's the first entry in authorized_keys)
 head -1 ~/.ssh/authorized_keys > /tmp/pubkey
-# install miko and have it set up SSH keys and default files
-sudo su - $PAAS_USERNAME -c "wget https://raw.githubusercontent.com/mardix/miko/master/miko.py && python3 ~/miko.py init && python3 ~/miko.py system:set-ssh /tmp/pubkey"
+# install sailor and have it set up SSH keys and default files
+sudo su - $PAAS_USERNAME -c "wget https://raw.githubusercontent.com/mardix/sailor/master/sailor.py && python3 ~/sailor.py init && python3 ~/sailor.py system:set-ssh /tmp/pubkey"
 rm /tmp/pubkey
 
 
-sudo ln /home/$PAAS_USERNAME/.miko/uwsgi/uwsgi.ini /etc/uwsgi/apps-enabled/miko.ini
+sudo ln /home/$PAAS_USERNAME/.sailor/uwsgi/uwsgi.ini /etc/uwsgi/apps-enabled/sailor.ini
 sudo systemctl restart uwsgi
 
 cd /tmp
-wget https://raw.githubusercontent.com/mardix/miko/master/incron.conf
-wget https://raw.githubusercontent.com/mardix/miko/master/nginx.conf
-wget https://raw.githubusercontent.com/mardix/miko/master/index.miko.html
+wget https://raw.githubusercontent.com/mardix/sailor/master/incron.conf
+wget https://raw.githubusercontent.com/mardix/sailor/master/nginx.conf
+wget https://raw.githubusercontent.com/mardix/sailor/master/index.sailor.html
 cp /tmp/nginx.conf /etc/nginx/sites-available/default
-cp /tmp/incron.conf /etc/incron.d/miko
-cp /tmp/index.miko.html /var/www/html
+cp /tmp/incron.conf /etc/incron.d/sailor
+cp /tmp/index.sailor.html /var/www/html
 
 echo ""
-echo "Miko installation complete!"
+echo "Sailor installation complete!"

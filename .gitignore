@@ -17,6 +17,10 @@ develop-eggs
 .installed.cfg
 MANIFEST
 
+.vscode
+.history
+.venv
+
 # PyCharm
 .idea/*
 .idea/libraries/sass_stdlib.xml
