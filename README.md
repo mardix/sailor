@@ -4,8 +4,27 @@
 <img src="./sailor.jpeg" style="width: 700px; height: auto;">
 
 ---
+## About
+
+ **Sailor** is a tiny **PaaS** to install on your servers/VPS (DigitalOcean, Hetzner, Linode).
  
-## A micro-app container that uses `git push` to deploy micro-apps and sites on your own servers similar to Heroku. Ship your apps it like a *Sailor*!
+ It uses `git push` to deploy micro-apps, micro-services and sites.
+ 
+It natively supports Python, Nodejs, Static sites, and any other languages that can use the command line. 
+
+Sites deployed with **Sailor** automatically have SSL assigned with LetsEncrypt.
+
+**Sailor** can run long-running background workers and cron jobs. 
+
+It allows you to deploy multiple sites/apps using a single repository. 
+
+It gives you the option of having testing/staging/production environment deployed from the same codebase.
+
+**Sailor** let's you see some stats about your apps, along with scaling them.
+
+**Sailor** makes deploying apps a smooth sailing.
+
+*Ship it like a **Sailor**!*
 
 ---
 
@@ -295,7 +314,7 @@ Sailor takes away all the complexity of Docker Containers or Dokku and gives you
 **Sailor** supports a Heroku-like workflow, like so:
 
 * Create a `git` SSH remote pointing to your **Sailor** server with the app name as repo name.
-  `git remote add sailor sailor@yourserver:appname`.
+  `git remote add sailor sailor@[yourserver]:[appname]`.
 * Push your code: `git push sailor master`.
 * **Sailor** determines the runtime and installs the dependencies for your app (building whatever's required).
    * For Python, it installs and segregates each app's dependencies from `requirements.txt` into a `virtualenv`.
@@ -440,6 +459,7 @@ apps:
 
 TODO
 - Allow multiple server name on same app with their own ssl
+- Auto scaling, up to a max workers
 
 ## CHANGELOG
 
@@ -447,6 +467,7 @@ TODO
   - Rebranding **Sailor**
   - Added process option `enabled` to run/not-run a process. Especially if you don't want to run a process without removing the code.
   - Fixed undefined value in setup_node_runtime
+  - fixed bindaddress bug
 
 - 0.5.0
   - Added revision hash info and deploy time. 
