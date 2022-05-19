@@ -459,7 +459,7 @@ apps:
 
 ## FAQ
 
-### How to deploy site with IP and PORT (without SERVER_NAME)
+### How to deploy site with IP and PORT (without SERVER_NAME) ?
 
 You can deploy a site without a server name. 
 
