@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Sailor"
-VERSION = "0.5.0" 
+VERSION = "0.11.0" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -77,6 +77,11 @@ CRON_REGEXP = "^((?:(?:\*\/)?\d+)|\*) ((?:(?:\*\/)?\d+)|\*) ((?:(?:\*\/)?\d+)|\*
 
 
 # -----------------------------------------------------------------------------
+# To disable nginx when process.web.server_name = '_'
+# It will use UWSGI server as is
+# it also requires 'process.web.server_port'
+SKIP_NGINX_USE_UWSGI_SERVER_NAME = "_"
+
 # NGINX
 NGINX_TEMPLATE = """
 upstream $APP {
@@ -458,9 +463,23 @@ def get_app_config(app):
         if k in cdata and v not in cdata:
             cdata[v] = cdata[k]
     if "web" in processes:
-        sn = processes["web"]["server_name"][0]
+        _wp = processes["web"]
+        sn = _wp.get("server_name")[0]
         cdata["SERVER_NAME"] = sn
         cdata["NGINX_SERVER_NAME"] = sn
+
+        # skip nginx and use uwsgi server as is 
+        # server_name must be '_'
+        # server_port must exist
+        sp = _wp.get("server_port")
+        if sn.strip() == SKIP_NGINX_USE_UWSGI_SERVER_NAME:
+            if not sp:
+                _error("missing 'process.web.server_port' when 'process.web.server_name' is '_'")
+
+            cdata["SERVER_PORT"] = sp
+            cdata["PORT"] = sp
+            cdata["BIND_ADDRESS"] = "0.0.0.0"
+
     return cdata
 
 def sanitize_config_data(config):
@@ -738,13 +757,10 @@ def spawn_app(app, deltas={}):
         'SSL_ISSUER': 'letsencrypt',
         'HTTPS_ONLY': True,
         'AUTO_RESTART': False,
-        'WSGI': True
-    }
-
-    safe_defaults = {
+        'WSGI': True,
         'NGINX_IPV4_ADDRESS': '0.0.0.0',
         'NGINX_IPV6_ADDRESS': '[::]',
-        'BIND_ADDRESS': '127.0.0.1',
+        'BIND_ADDRESS': '127.0.0.1'
     }
 
     # add node path if present
@@ -753,7 +769,7 @@ def spawn_app(app, deltas={}):
         env["NODE_PATH"] = node_path
         env["PATH"] = ':'.join([join(node_path, ".bin"), env['PATH']])
 
-    # SPAWN Env
+    # Update the env with app env
     env.update(get_spawn_env(app))
     
     if env.get("HTTPS_ONLY") is True and env.get("SSL") is False:
@@ -761,18 +777,12 @@ def spawn_app(app, deltas={}):
 
     if 'web' in workers:
         # Pick a port if none defined
-        if 'PORT' not in env:
+        if 'PORT' not in env or not env.get("PORT"):
             env['PORT'] = str(get_free_port())
             echo("-------> picking free port %s" % env["PORT"])
 
-        # Safe defaults for addressing
-        for k, v in safe_defaults.items():
-            if k not in env:
-                echo("-------> nginx {k:s} set to {v}".format(**locals()))
-                env[k] = v
-
         # NGINX: Set up nginx if we have NGINX_SERVER_NAME set
-        if 'NGINX_SERVER_NAME' in env:
+        if env.get('NGINX_SERVER_NAME') and env.get('NGINX_SERVER_NAME', '').strip() != SKIP_NGINX_USE_UWSGI_SERVER_NAME:
             nginx = command_output("nginx -V")
             nginx_ssl = "443 ssl"
             if "--with-http_v2_module" in nginx:

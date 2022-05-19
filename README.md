@@ -457,11 +457,49 @@ apps:
 
 ---
 
+## FAQ
+
+### How to deploy site with IP and PORT (without SERVER_NAME)
+
+You can deploy a site without a server name. 
+
+The server IP will be used instead of a server name
+
+You need to set the `web.server_port` to the desired port. 
+
+Beware the connection will not be behind NGINX nor use SSL. 
+
+This option is mainly for internal or IP based app.
+
+
+```
+# example sailor.yml
+
+...
+  process:
+    web: 
+      ...,
+
+      #-- set server name to _
+      server_name: _
+      
+      #-- set server port
+      server_port: 8081
+
+```
+
+
+---
+
 TODO
 - Allow multiple server name on same app with their own ssl
 - Auto scaling, up to a max workers
 
+
 ## CHANGELOG
+
+- 0.11.0
+  - Added possibility to deploy site without server_name but using IP and desired PORT  
 
 - 0.10.0
   - Rebranding **Sailor**
