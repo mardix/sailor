@@ -475,10 +475,15 @@ def get_app_config(app):
         if sn.strip() == SKIP_NGINX_USE_UWSGI_SERVER_NAME:
             if not sp:
                 _error("missing 'process.web.server_port' when 'process.web.server_name' is '_'")
-
-            cdata["SERVER_PORT"] = sp
-            cdata["PORT"] = sp
-            cdata["BIND_ADDRESS"] = "0.0.0.0"
+                
+            cdata.update({
+                "SERVER_PORT": str(sp),
+                "PORT": str(sp),
+                "BIND_ADDRESS": "0.0.0.0",
+                "SSL": False,
+                "SSL_ISSUER": None,
+                "HTTPS_ONLY": False,
+            })
 
     return cdata
 
