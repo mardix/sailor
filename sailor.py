@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Sailor"
-VERSION = "0.11.0" 
+VERSION = "0.11.0-b" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
