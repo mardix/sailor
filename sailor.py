@@ -1414,8 +1414,8 @@ def cmd_version():
 
 
 @cli.command("x:update")
-@click.argument('branch',required=False)
-def cmd_update(branch="master"):
+@click.argument('branch',required=False, default="master")
+def cmd_update(branch):
     """ Update Sailor to the latest from Github. x:update $branch """
     print_title("Updating Sailor...")
     url = "https://raw.githubusercontent.com/mardix/sailor/%s/sailor.py" % branch
