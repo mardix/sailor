@@ -39,7 +39,7 @@ It gives you the option of having testing/staging/production environment deploye
 - Easy configuration with sailor.yml manifest
 - Easy command line setup
 - Cron-like/Scheduled script executions
-- App management: `start, stop, reload, rm, stop, scale, log, info` etc
+- App management: `ls, start, stop, reload, rm, stop, scale, log, info` etc
 - Run scripts during application lifecycle: `release, predeploy, postdeploy, destroy`
 - SSL/HTTPS with LetsEncrypt and ZeroSSL
 - Supports any Shell script, therefore any other languages are supported
@@ -150,16 +150,16 @@ ssh sailor@$host
 ```
 
 
-##### List all apps: `apps`
+##### List all apps: `ls`
 
 ```
-ssh sailor@$host apps
+ssh sailor@$host ls
 ```
 
 The command above will show the minimal info. To expand:
 
 ```
-ssh sailor@$host apps x
+ssh sailor@$host ls x
 ```
 
 ##### Start app: `start $app_name`
