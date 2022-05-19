@@ -1165,7 +1165,7 @@ def _show_info(app, enabled_files, minimal=False, show_workers=True, show_metric
     deployinfo = read_deployinfo(app)
     
     if minimal:
-        print("- %s | %s | %s" % (app, status, deployinfo.get("revision")))
+        print("- %s - status: %s |  port: %s | rev: %s" % (app, status, port, deployinfo.get("revision")))
     else:
         if "web" in workers:
             workers_len = workers_len - 1 # not counting the web as a worker
