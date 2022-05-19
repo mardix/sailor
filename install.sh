@@ -41,7 +41,7 @@ sudo adduser --disabled-password --gecos 'PaaS access' --ingroup www-data $PAAS_
 # copy your public key to /tmp (assuming it's the first entry in authorized_keys)
 head -1 ~/.ssh/authorized_keys > /tmp/pubkey
 # install sailor and have it set up SSH keys and default files
-sudo su - $PAAS_USERNAME -c "wget https://raw.githubusercontent.com/mardix/sailor/master/sailor.py && python3 ~/sailor.py init && python3 ~/sailor.py system:set-ssh /tmp/pubkey"
+sudo su - $PAAS_USERNAME -c "wget https://raw.githubusercontent.com/mardix/sailor/master/sailor.py && python3 ~/sailor.py init && python3 ~/sailor.py x:set-ssh /tmp/pubkey"
 rm /tmp/pubkey
 
 

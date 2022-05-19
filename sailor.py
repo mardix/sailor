@@ -1242,7 +1242,7 @@ https://github.com/mardix/sailor/
 
 # --- User commands ---
 
-@cli.command("apps")
+@cli.command("ls")
 @click.argument('expanded', required=False)
 def cmd_apps(expanded=None):
     """List all apps"""
@@ -1254,11 +1254,11 @@ def cmd_apps(expanded=None):
             _show_info(app, enabled_files=enabled_files, minimal=minimal, show_envs=False)
     print()
 
-@cli.command("deploy")
+@cli.command("start")
 @click.argument('app')
 def cmd_deploy(app):
-    """Deploy app: [<app>]"""
-    echo("Deploy app", fg="green")
+    """Start app: [<app>]"""
+    echo("Start app", fg="green")
     check_app(app)
     app = sanitize_app_name(app)
     _delete_app(app, delete_app=False, remove_certs=False)
@@ -1282,7 +1282,7 @@ def cmd_reload(app):
     _reload_app(app)
 
 
-@cli.command("apps:reload-all")
+@cli.command("reload-all")
 def cmd_reload_all():
     """Reload all apps"""
     print("= Reload all")
@@ -1291,7 +1291,32 @@ def cmd_reload_all():
             _reload_app(app)
     
 
-@cli.command("remove")
+@cli.command("stop")
+@click.argument('app')
+def cmd_stop(app):
+    """Stop app: [<app>]"""
+    echo("Stopping app", fg="green")
+    check_app(app)
+    app = sanitize_app_name(app)
+    remove_nginx_conf(app)
+    cleanup_uwsgi_enabled_ini(app)
+    write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
+    echo("-------> '%s' stopped" % app)
+
+@cli.command("stop-all")
+def cmd_stop_all():
+    """Stop all apps"""
+    echo("Stopping all apps", fg="green")
+    for app in listdir(APP_ROOT):
+        if not app.startswith((".", "_")):
+            app = sanitize_app_name(app)
+            remove_nginx_conf(app)
+            cleanup_uwsgi_enabled_ini(app)
+            write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
+            echo("-------> '%s' stopped" % app)
+
+
+@cli.command("rm")
 @click.argument('app')
 def cmd_destroy(app):
     """To remove app: [<app>]"""
@@ -1381,38 +1406,14 @@ def cmd_reload(app):
     spawn_app(app)
 
 
-@cli.command("stop")
-@click.argument('app')
-def cmd_stop(app):
-    """Stop app: [<app>]"""
-    echo("Stopping app", fg="green")
-    check_app(app)
-    app = sanitize_app_name(app)
-    remove_nginx_conf(app)
-    cleanup_uwsgi_enabled_ini(app)
-    write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
-    echo("-------> '%s' stopped" % app)
 
-@cli.command("apps:stop-all")
-def cmd_stop_all():
-    """Stop all apps"""
-    echo("Stopping all apps", fg="green")
-    for app in listdir(APP_ROOT):
-        if not app.startswith((".", "_")):
-            app = sanitize_app_name(app)
-            remove_nginx_conf(app)
-            cleanup_uwsgi_enabled_ini(app)
-            write_deployinfo(app, {"deployed": 0, "stopped": utcnow()}) 
-            echo("-------> '%s' stopped" % app)
-
-
-@cli.command("system:version")
+@cli.command("x:version")
 def cmd_version():
     """ Get Version """
     echo("%s v.%s" % (NAME, VERSION), fg="green")
 
 
-@cli.command("system:update")
+@cli.command("x:update")
 @click.argument('branch',required=False)
 def cmd_update(branch="master"):
     """ Update Sailor to the latest from Github. x:update $branch """
@@ -1430,7 +1431,7 @@ def cmd_update(branch="master"):
     echo("...update completed!", fg="green")
 
 
-@cli.command("system:set-ssh")
+@cli.command("x:set-ssh")
 @click.argument('public_key_file')
 def cmd_setup_ssh(public_key_file):
     """Set up a new SSH key (use - for stdin)"""

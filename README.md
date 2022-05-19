@@ -39,7 +39,7 @@ It gives you the option of having testing/staging/production environment deploye
 - Easy configuration with sailor.yml manifest
 - Easy command line setup
 - Cron-like/Scheduled script executions
-- App management: `deploy, reload, stop, remove, scale, log, info` etc
+- App management: `start, stop, reload, rm, stop, scale, log, info` etc
 - Run scripts during application lifecycle: `release, predeploy, postdeploy, destroy`
 - SSL/HTTPS with LetsEncrypt and ZeroSSL
 - Supports any Shell script, therefore any other languages are supported
@@ -162,18 +162,13 @@ The command above will show the minimal info. To expand:
 ssh sailor@$host apps x
 ```
 
-##### Deploy app: `deploy $app_name`
+##### Start app: `start $app_name`
 
 
 ```
-ssh sailor@$host deploy $app_name
+ssh sailor@$host start $app_name
 ```
 
-##### Reload app: `reload $app_name`
-
-```
-ssh sailor@$host reload $app_name
-```
 
 ##### Stop app: `stop $app_name`
 
@@ -181,12 +176,19 @@ ssh sailor@$host reload $app_name
 ssh sailor@$host stop $app_name
 ```
 
-##### Remove app: `remove $app_name`
 
-To completely remove the application
+##### Remove app: `rm $app_name`
+
+To completely delete the application
 
 ```
-ssh sailor@$host remove $app_name
+ssh sailor@$host rm $app_name
+```
+
+##### Reload app: `reload $app_name`
+To reload a running application
+```
+ssh sailor@$host reload $app_name
 ```
 
 
@@ -227,14 +229,14 @@ Example:
 ssh sailor@$host scale site.com web=4
 ```
 
-##### Reload all apps: `apps:reload-all`
+##### Reload all apps: `reload-all`
 
 
 ```
 ssh sailor@$host apps:reload-all
 ```
 
-##### Stop all apps: `apps:stop-all`
+##### Stop all apps: `stop-all`
 
 ```
 ssh sailor@$host apps:stop-all
@@ -243,13 +245,13 @@ ssh sailor@$host apps:stop-all
 #### -- Misc --
 
 
-##### Show the version: `system:version`
+##### Show the version: `x:version`
 
 ```
 ssh sailor@$host system:version
 ```
 
-##### Update the system `system:update`
+##### Update the system `x:update`
 
 To update Sailor to the latest from Github
 
@@ -513,8 +515,14 @@ TODO
 ## CHANGELOG
 
 - 0.11.0
-  - Added possibility to deploy site without server_name but using IP and desired PORT  
-
+  - Added possibility to deploy site without server_name but using IP and desired PORT
+  - Change commands to be more streamline
+    - ls 
+    - start
+    - rm   
+    - x:update
+    - x:version
+  
 - 0.10.0
   - Rebranding **Sailor**
   - Added process option `enabled` to run/not-run a process. Especially if you don't want to run a process without removing the code.
