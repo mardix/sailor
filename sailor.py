@@ -42,7 +42,7 @@ from grp import getgrgid
 # -----------------------------------------------------------------------------
 
 NAME = "Sailor"
-VERSION = "0.11.0" 
+VERSION = "0.11.1" 
 VALID_RUNTIME = ["python", "node", "static", "shell"]
 
 
@@ -1318,17 +1318,19 @@ def cmd_stop_all():
 
 @cli.command("rm")
 @click.argument('app')
-def cmd_destroy(app):
+@click.option("-f", "--force", is_flag=True, default=False)
+def cmd_destroy(app, force=False):
     """To remove app: [<app>]"""
-    echo("**** WARNING ****", fg="red")
-    echo("**** YOU ARE ABOUT TO DESTROY AN APP ****", fg="red")
+    if force is False:
+        echo("**** WARNING ****", fg="red")
+        echo("**** YOU ARE ABOUT TO DESTROY AN APP ****", fg="red")
 
-    check_app(app)
-    app = sanitize_app_name(app)
-    if not click.confirm("Do you want to destroy this app? It will delete everything"):
-        exit(1)
-    if not click.confirm("Are you really sure?"):
-        exit(1)
+        check_app(app)
+        app = sanitize_app_name(app)
+        if not click.confirm("Do you want to destroy this app? It will delete everything"):
+            exit(1)
+        if not click.confirm("Are you really sure?"):
+            exit(1)
 
     _delete_app(app)
 

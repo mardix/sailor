@@ -185,8 +185,18 @@ To completely delete the application
 ssh sailor@$host rm $app_name
 ```
 
+To force remove an app without prompt `rm -f $app_name` 
+
+```
+ssh sailor@$host rm -f $app_name
+```
+
+
 ##### Reload app: `reload $app_name`
+
+
 To reload a running application
+
 ```
 ssh sailor@$host reload $app_name
 ```
@@ -513,6 +523,9 @@ TODO
 
 
 ## CHANGELOG
+
+- 0.11.1
+  - Update command `rm -f|--force` to force remove an application without the prompt. ie: `sailor rm -f $app_name`
 
 - 0.11.0
   - Added possibility to deploy site without server_name but using IP and desired PORT
