@@ -1,5 +1,5 @@
 
-echo "Sailor installer: Ubuntu 22.04"
+echo "Sailor installer. Ubuntu 20.04"
 
 apt-get update
 apt-get install -y bc wget \
@@ -21,7 +21,7 @@ apt-get install -y bc wget \
    python3-pip \
    python3-click \
    python3-virtualenv \
-   python3-yaml \
+   python-yaml \
    uwsgi \
    uwsgi-plugin-asyncio-python3 \
    uwsgi-plugin-gevent-python3 \
@@ -31,8 +31,6 @@ apt-get install -y bc wget \
    nodejs \
    npm \
    nodeenv
-sudo add-apt-repository ppa:deadsnakes/ppa -y
-sudo apt install python3.11
 apt-get update
 
 PAAS_USERNAME=sailor

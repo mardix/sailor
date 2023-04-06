@@ -60,7 +60,7 @@ It gives you the option of having testing/staging/production environment deploye
 
 - Fresh server (highly recommended)
 - SSH to server with root access
-- Ubuntu 20.04
+- Ubuntu 22.04
 
 
 #### 2. Install Sailor on the server
@@ -523,6 +523,11 @@ TODO
 
 
 ## CHANGELOG
+
+- 0.12.0
+  - Now installs on Ubuntu 22.04
+  - Supports Python 3.11 as `python3.11`
+  - Ubuntu 20.04 is still supported by using `install-2004.sh`
 
 - 0.11.1
   - Update command `rm -f|--force` to force remove an application without the prompt. ie: `sailor rm -f $app_name`
