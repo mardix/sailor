@@ -32,7 +32,7 @@ apt-get install -y bc wget \
    npm \
    nodeenv
 sudo add-apt-repository ppa:deadsnakes/ppa -y
-sudo apt install python3.11
+sudo apt install python3.11 -y
 apt-get update
 
 PAAS_USERNAME=sailor
